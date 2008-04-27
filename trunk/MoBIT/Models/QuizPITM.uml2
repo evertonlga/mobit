@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml2:Model xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:uml2="uml2">
+  <ownedMember xsi:type="uml2:Class" name="System" extension="//@ownedMember.7"/>
+  <ownedMember xsi:type="uml2:Class" name="Quiz" extension="//@ownedMember.9">
+    <ownedAttribute name="initialTime" qualifiedName="" default=""/>
+    <ownedAttribute name="acumulatedTime"/>
+    <ownedAttribute name="status" type="//@root.0"/>
+    <ownedAttribute name="result" type="//@ownedMember.4"/>
+    <ownedAttribute name="numberOfQuestions"/>
+    <ownedOperation name="start"/>
+    <ownedOperation name="pause"/>
+    <ownedOperation name="help"/>
+    <ownedOperation name="abort"/>
+    <ownedOperation name="setPartialResult" visibility="private">
+      <formalParameter name="r" type="//@ownedMember.4"/>
+    </ownedOperation>
+    <ownedOperation name="getpartialResult">
+      <ownedParameter name="res" type="//@ownedMember.4" direction="return"/>
+    </ownedOperation>
+    <ownedOperation name="configure"/>
+    <ownedOperation name="answerQuestion">
+      <formalParameter name="q" type="//@ownedMember.6"/>
+      <ownedParameter name="userAnswer"/>
+    </ownedOperation>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="QuizManager" extension="//@ownedMember.8">
+    <ownedAttribute name="quizesResult"/>
+    <ownedAttribute name="numberOfQuizes"/>
+    <ownedOperation name="schedulerOfQuizes">
+      <ownedParameter name="quizes"/>
+    </ownedOperation>
+    <ownedOperation name="createUserProfile">
+      <formalParameter name="results"/>
+    </ownedOperation>
+    <ownedOperation name="evaluateResult">
+      <formalParameter name="numberOfQuestions"/>
+      <formalParameter name="result"/>
+    </ownedOperation>
+    <ownedOperation name="evaluateFinalResult">
+      <formalParameter name="numberOfQuestions"/>
+      <formalParameter name="results"/>
+    </ownedOperation>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="QuestionGenerator" extension="//@ownedMember.10">
+    <ownedOperation/>
+    <ownedOperation/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="Result">
+    <ownedOperation/>
+    <ownedOperation/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="CategoryResult"/>
+  <ownedMember xsi:type="uml2:Class" name="Question"/>
+  <ownedMember xsi:type="uml2:Extension" name="Ext Sy" metaclass="//@ownedMember.0">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd Sy" type="//@ownedMember.27"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" name="Ext QM" metaclass="//@ownedMember.2">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd QM" type="//@ownedMember.24"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" name="Ext Qz" metaclass="//@ownedMember.1">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd Qz" type="//@ownedMember.24"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" name="Ext QG" metaclass="//@ownedMember.3">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd QG" type="//@ownedMember.24"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.17" name="Ext_Ass Sy-QZ">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd_Ass Sy-QZ" type="//@ownedMember.26"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.18" name="Ext_Ass Sy-QM">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd_Ass Sy-QM" type="//@ownedMember.26"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.19" name="Ext_Ass QM-QZ">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd_Ass QM-QZ" type="//@ownedMember.25"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.20" name="Ext_Ass QZ-QG">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd_Ass QZ-QG" type="//@ownedMember.25"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Enumeration" name="CategoryKind">
+    <ownedLiteral name="network"/>
+    <ownedLiteral name="softwareEngineenring"/>
+    <ownedLiteral name="dataBase"/>
+    <ownedLiteral name="hardwareEngineenring"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Enumeration" name="StatusKind">
+    <ownedLiteral name="ready"/>
+    <ownedLiteral name="running"/>
+    <ownedLiteral name="helping"/>
+    <ownedLiteral name="ending"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Association" ownedElement="//@ownedMember.11" name="Sy-Qz" memberEnd="//@root.1 //@root.6" navigableOwnedEnd="//@root.6"/>
+  <ownedMember xsi:type="uml2:Association" ownedElement="//@ownedMember.12" name="Sy-QM" memberEnd="//@root.2 //@root.4" navigableOwnedEnd="//@root.4"/>
+  <ownedMember xsi:type="uml2:Association" ownedElement="//@ownedMember.13" name="QM-Qz" memberEnd="//@root.5 //@root.7" navigableOwnedEnd="//@root.7"/>
+  <ownedMember xsi:type="uml2:Association" ownedElement="//@ownedMember.14" name="Qz-QG" memberEnd="//@root.8 //@root.11" navigableOwnedEnd="//@root.11"/>
+  <ownedMember xsi:type="uml2:Association" name="Qz-R" memberEnd="//@root.9 //@root.14" navigableOwnedEnd="//@root.14"/>
+  <ownedMember xsi:type="uml2:Association" name="R-RC" memberEnd="//@root.15 //@root.16" navigableOwnedEnd="//@root.16"/>
+  <ownedMember xsi:type="uml2:Association" name="QG-Q" memberEnd="//@root.12 //@root.13" navigableOwnedEnd="//@root.13"/>
+  <ownedMember xsi:type="uml2:Stereotype" name="Component"/>
+  <ownedMember xsi:type="uml2:Stereotype" name="acquires"/>
+  <ownedMember xsi:type="uml2:Stereotype" name="creates"/>
+  <ownedMember xsi:type="uml2:Stereotype" name="Context"/>
+  <ownedMember xsi:type="uml2:Interaction" name="testCase1">
+    <lifeline name="QuizTester2" coveredBy="//@ownedMember.28/@fragment.0 //@ownedMember.28/@fragment.2 //@ownedMember.28/@fragment.4 //@ownedMember.28/@fragment.6 //@ownedMember.28/@fragment.8 //@ownedMember.28/@fragment.10 //@ownedMember.28/@fragment.12 //@ownedMember.28/@fragment.14 //@ownedMember.28/@fragment.16 //@ownedMember.28/@fragment.18 //@ownedMember.28/@fragment.20 //@ownedMember.28/@fragment.22" represents="//@root.19"/>
+    <lifeline name="TestableQuiz2" coveredBy="//@ownedMember.28/@fragment.1 //@ownedMember.28/@fragment.3 //@ownedMember.28/@fragment.5 //@ownedMember.28/@fragment.7 //@ownedMember.28/@fragment.9 //@ownedMember.28/@fragment.11 //@ownedMember.28/@fragment.13 //@ownedMember.28/@fragment.15 //@ownedMember.28/@fragment.17 //@ownedMember.28/@fragment.19 //@ownedMember.28/@fragment.21 //@ownedMember.28/@fragment.23" represents="//@root.21"/>
+    <message name="tc1" receiveEvent="//@ownedMember.28/@fragment.1" sendEvent="//@ownedMember.28/@fragment.0" signature="//@ownedMember.32/@ownedOperation.0"/>
+    <message name="tc2" receiveEvent="//@ownedMember.28/@fragment.3" sendEvent="//@ownedMember.28/@fragment.2" signature="//@ownedMember.32/@ownedOperation.4"/>
+    <message name="tc3" receiveEvent="//@ownedMember.28/@fragment.5" sendEvent="//@ownedMember.28/@fragment.4" signature="//@ownedMember.1/@ownedOperation.0"/>
+    <message name="tc4" receiveEvent="//@ownedMember.28/@fragment.7" sendEvent="//@ownedMember.28/@fragment.6" signature="//@ownedMember.32/@ownedOperation.5"/>
+    <message name="tc5" receiveEvent="//@ownedMember.28/@fragment.9" sendEvent="//@ownedMember.28/@fragment.8" signature="//@ownedMember.1/@ownedOperation.1"/>
+    <message name="tc6" receiveEvent="//@ownedMember.28/@fragment.11" sendEvent="//@ownedMember.28/@fragment.10" signature="//@ownedMember.32/@ownedOperation.5"/>
+    <message name="tc7" receiveEvent="//@ownedMember.28/@fragment.13" sendEvent="//@ownedMember.28/@fragment.12" signature="//@ownedMember.1/@ownedOperation.2"/>
+    <message name="tc8" receiveEvent="//@ownedMember.28/@fragment.15" sendEvent="//@ownedMember.28/@fragment.14" signature="//@ownedMember.32/@ownedOperation.6"/>
+    <message name="tc9" receiveEvent="//@ownedMember.28/@fragment.17" sendEvent="//@ownedMember.28/@fragment.16" signature="//@ownedMember.32/@ownedOperation.1"/>
+    <message name="tc10" receiveEvent="//@ownedMember.28/@fragment.19" sendEvent="//@ownedMember.28/@fragment.18" signature="//@ownedMember.32/@ownedOperation.5"/>
+    <message name="tc11" receiveEvent="//@ownedMember.28/@fragment.21" sendEvent="//@ownedMember.28/@fragment.20" signature="//@ownedMember.32/@ownedOperation.3"/>
+    <message name="tc12" sendEvent="//@ownedMember.28/@fragment.22" signature="//@ownedMember.32/@ownedOperation.7"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc1_OUT" covered="//@ownedMember.28/@lifeline.0" sendMessage="//@ownedMember.28/@message.0"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc1_IN" covered="//@ownedMember.28/@lifeline.1" receiveMessage="//@ownedMember.28/@message.0"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc2_OUT" covered="//@ownedMember.28/@lifeline.0" sendMessage="//@ownedMember.28/@message.1"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc2_IN" covered="//@ownedMember.28/@lifeline.1" receiveMessage="//@ownedMember.28/@message.1"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc3_OUT" covered="//@ownedMember.28/@lifeline.0" sendMessage="//@ownedMember.28/@message.2"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc3_IN" covered="//@ownedMember.28/@lifeline.1" receiveMessage="//@ownedMember.28/@message.2"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc4_OUT" covered="//@ownedMember.28/@lifeline.0" sendMessage="//@ownedMember.28/@message.3"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc4_IN" covered="//@ownedMember.28/@lifeline.1" receiveMessage="//@ownedMember.28/@message.3"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc5_OUT" covered="//@ownedMember.28/@lifeline.0" sendMessage="//@ownedMember.28/@message.4"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc5_IN" covered="//@ownedMember.28/@lifeline.1" receiveMessage="//@ownedMember.28/@message.4"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc6_OUT" covered="//@ownedMember.28/@lifeline.0" sendMessage="//@ownedMember.28/@message.5"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc6_IN" covered="//@ownedMember.28/@lifeline.1" receiveMessage="//@ownedMember.28/@message.5"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc7_OUT" covered="//@ownedMember.28/@lifeline.0" sendMessage="//@ownedMember.28/@message.6"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc7_IN" covered="//@ownedMember.28/@lifeline.1" receiveMessage="//@ownedMember.28/@message.6"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc8_OUT" covered="//@ownedMember.28/@lifeline.0" sendMessage="//@ownedMember.28/@message.7"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc8_IN" covered="//@ownedMember.28/@lifeline.1" receiveMessage="//@ownedMember.28/@message.7"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc9_OUT" covered="//@ownedMember.28/@lifeline.0" sendMessage="//@ownedMember.28/@message.8"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc9_IN" covered="//@ownedMember.28/@lifeline.1" receiveMessage="//@ownedMember.28/@message.8"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc10_OUT" covered="//@ownedMember.28/@lifeline.0" sendMessage="//@ownedMember.28/@message.9"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc10_IN" covered="//@ownedMember.28/@lifeline.1" receiveMessage="//@ownedMember.28/@message.9"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc11_OUT" covered="//@ownedMember.28/@lifeline.0" sendMessage="//@ownedMember.28/@message.10"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc11_IN" covered="//@ownedMember.28/@lifeline.1" receiveMessage="//@ownedMember.28/@message.10"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc12_OUT" covered="//@ownedMember.28/@lifeline.0" sendMessage="//@ownedMember.28/@message.11"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="tc12_IN" covered="//@ownedMember.28/@lifeline.1"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Interaction" name="testCase2"/>
+  <ownedMember xsi:type="uml2:Class" name="TestingQuizManager" superClass="//@ownedMember.2">
+    <ownedOperation name="setTester">
+      <formalParameter name="tester" type="//@ownedMember.31"/>
+    </ownedOperation>
+    <ownedOperation name="setServer">
+      <formalParameter name="server" type="//@ownedMember.32"/>
+    </ownedOperation>
+    <ownedOperation name="performTest"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="QuizTester">
+    <ownedAttribute name="arbiter" type="//@ownedMember.33"/>
+    <ownedOperation name="testCase1"/>
+    <ownedOperation name="testCase2"/>
+    <ownedOperation name="testCase3"/>
+    <ownedOperation name="executeTest">
+      <formalParameter name="testable" type="//@ownedMember.32"/>
+    </ownedOperation>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="TestableQuiz" superClass="//@ownedMember.1">
+    <ownedOperation ownedElement="//@ownedMember.51 //@ownedMember.43 //@ownedMember.35" name="setToReady"/>
+    <ownedOperation ownedElement="//@ownedMember.52 //@ownedMember.44 //@ownedMember.36" name="setToRunning"/>
+    <ownedOperation ownedElement="//@ownedMember.53 //@ownedMember.45 //@ownedMember.37" name="setToHelping"/>
+    <ownedOperation ownedElement="//@ownedMember.54 //@ownedMember.46 //@ownedMember.38" name="setToEnding"/>
+    <ownedOperation ownedElement="//@ownedMember.55 //@ownedMember.47 //@ownedMember.39" name="isInReady"/>
+    <ownedOperation ownedElement="//@ownedMember.56 //@ownedMember.48 //@ownedMember.40" name="isInRunning"/>
+    <ownedOperation ownedElement="//@ownedMember.57 //@ownedMember.49 //@ownedMember.41" name="isInHelping"/>
+    <ownedOperation ownedElement="//@ownedMember.58 //@ownedMember.50 //@ownedMember.42" name="isInEnding"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="Arbiter"/>
+  <ownedMember xsi:type="uml2:Enumeration" name="Verdict">
+    <ownedLiteral name="pass"/>
+    <ownedLiteral name="fail"/>
+    <ownedLiteral name="inconclusive"/>
+    <ownedLiteral name="error"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.0" name="stateSetting1">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.28"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.1" name="stateSetting2">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.28"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.2" name="stateSetting3">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.28"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.3" name="stateSetting4">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.28"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.4" name="stateChecking1">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.29"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.5" name="stateChecking2">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.29"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.6" name="stateChecking3">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.29"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.7" name="stateChecking4">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.29"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.0" name="testing1">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.27"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.1" name="testing2">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.27"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.2" name="testing3">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.27"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.3" name="testing4">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.27"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.4" name="testing5">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.27"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.5" name="testing6">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.27"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.6" name="testing7">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.27"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.7" name="testing8">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.27"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.0" name="interface1">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.26"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.1" name="interface2">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.26"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.2" name="interface3">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.26"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.3" name="interface4">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.26"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.4" name="interface5">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.26"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.5" name="interface6">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.26"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.6" name="interface7">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.26"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.32/@ownedOperation.7" name="interface8">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" type="//@root.26"/>
+  </ownedMember>
+  <root xsi:type="uml2:Enumeration" name="StatusKind">
+    <ownedLiteral name="ready"/>
+    <ownedLiteral name="running"/>
+    <ownedLiteral name="helping"/>
+    <ownedLiteral name="ending"/>
+  </root>
+  <root xsi:type="uml2:Property" name="Sy1" type="//@ownedMember.0" association="//@ownedMember.17"/>
+  <root xsi:type="uml2:Property" name="Sy2" type="//@ownedMember.0" association="//@ownedMember.18"/>
+  <root xsi:type="uml2:Property" name="Sy3" type="//@ownedMember.0"/>
+  <root xsi:type="uml2:Property" name="QM1" type="//@ownedMember.2" association="//@ownedMember.18"/>
+  <root xsi:type="uml2:Property" name="QM2" type="//@ownedMember.2" association="//@ownedMember.19"/>
+  <root xsi:type="uml2:Property" name="QZ1" type="//@ownedMember.1" association="//@ownedMember.17"/>
+  <root xsi:type="uml2:Property" name="QZ2" type="//@ownedMember.1" association="//@ownedMember.19"/>
+  <root xsi:type="uml2:Property" name="QZ3" type="//@ownedMember.1" association="//@ownedMember.20"/>
+  <root xsi:type="uml2:Property" name="QZ4" type="//@ownedMember.1" association="//@ownedMember.21"/>
+  <root xsi:type="uml2:Property" name="QG1" type="//@ownedMember.3"/>
+  <root xsi:type="uml2:Property" name="QG2" type="//@ownedMember.3" association="//@ownedMember.20"/>
+  <root xsi:type="uml2:Property" name="QG3" type="//@ownedMember.3" association="//@ownedMember.23"/>
+  <root xsi:type="uml2:Property" name="Q" type="//@ownedMember.6" association="//@ownedMember.23"/>
+  <root xsi:type="uml2:Property" name="R1" type="//@ownedMember.4" association="//@ownedMember.21"/>
+  <root xsi:type="uml2:Property" name="R2" type="//@ownedMember.4" association="//@ownedMember.22"/>
+  <root xsi:type="uml2:Property" name="CR" type="//@ownedMember.5" association="//@ownedMember.22"/>
+  <root xsi:type="uml2:StateMachine">
+    <region>
+      <subvertex xsi:type="uml2:State" name="ready"/>
+      <subvertex xsi:type="uml2:State" name="running"/>
+      <subvertex xsi:type="uml2:State" name="helping"/>
+      <subvertex xsi:type="uml2:State" name="ending"/>
+    </region>
+  </root>
+  <root xsi:type="uml2:Property" name="TQM" type="//@ownedMember.30" association="//@root.22"/>
+  <root xsi:type="uml2:Property" name="QT" type="//@ownedMember.31" association="//@root.22"/>
+  <root xsi:type="uml2:Property" name="QT2" type="//@ownedMember.31" association="//@root.23"/>
+  <root xsi:type="uml2:Property" name="TQ2" type="//@ownedMember.32" association="//@root.23"/>
+  <root xsi:type="uml2:Association" ownedElement="//@root.24" name="TQM-QT" memberEnd="//@root.18 //@root.19" navigableOwnedEnd="//@root.19"/>
+  <root xsi:type="uml2:Association" ownedElement="//@root.25" name="QT-TQ" memberEnd="//@root.20 //@root.21" navigableOwnedEnd="//@root.21"/>
+  <root xsi:type="uml2:Extension" owner="//@root.22" name="Ext Assoc TQM-QT">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd Assoc TQM-QT" type="//@ownedMember.25"/>
+  </root>
+  <root xsi:type="uml2:Extension" owner="//@root.23" name="Ext Assoc QT-TQ">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd Assoc QT-TQ" type="//@ownedMember.25"/>
+  </root>
+  <root xsi:type="uml2:Stereotype" name="testing Interface"/>
+  <root xsi:type="uml2:Stereotype" name="testing"/>
+  <root xsi:type="uml2:Stereotype" name="stateSetting"/>
+  <root xsi:type="uml2:Stereotype" name="stateChecking"/>
+  <root xsi:type="uml2:Interaction" name="Test Cases Execution">
+    <lifeline name="System" coveredBy="//@root.30/@fragment.0 //@root.30/@fragment.2 //@root.30/@fragment.4 //@root.30/@fragment.6 //@root.30/@fragment.8 //@root.30/@fragment.10" represents="//@root.1"/>
+    <lifeline name="TestingQuizManager" coveredBy="//@root.30/@fragment.1 //@root.30/@fragment.7 //@root.30/@fragment.9 //@root.30/@fragment.11 //@root.30/@fragment.12" represents="//@root.18"/>
+    <lifeline name="QuizTester" coveredBy="//@root.30/@fragment.3 //@root.30/@fragment.13 //@root.30/@fragment.14 //@root.30/@fragment.15 //@root.30/@fragment.16 //@root.30/@fragment.17" represents="//@root.19"/>
+    <lifeline name="TestableQuiz" coveredBy="//@root.30/@fragment.5" represents="//@root.21"/>
+    <message name="1" receiveEvent="//@root.30/@fragment.1" sendEvent="//@root.30/@fragment.0"/>
+    <message name="2" receiveEvent="//@root.30/@fragment.3" sendEvent="//@root.30/@fragment.2"/>
+    <message name="3" receiveEvent="//@root.30/@fragment.5" sendEvent="//@root.30/@fragment.4"/>
+    <message name="4" receiveEvent="//@root.30/@fragment.7" sendEvent="//@root.30/@fragment.6" signature="//@ownedMember.30/@ownedOperation.1"/>
+    <message name="5" receiveEvent="//@root.30/@fragment.9" sendEvent="//@root.30/@fragment.8" signature="//@ownedMember.30/@ownedOperation.0"/>
+    <message name="6" receiveEvent="//@root.30/@fragment.11" sendEvent="//@root.30/@fragment.10" signature="//@ownedMember.30/@ownedOperation.2"/>
+    <message name="7" receiveEvent="//@root.30/@fragment.13" sendEvent="//@root.30/@fragment.12" signature="//@ownedMember.31/@ownedOperation.3"/>
+    <message name="8" receiveEvent="//@root.30/@fragment.15" sendEvent="//@root.30/@fragment.14" signature="//@ownedMember.31/@ownedOperation.0"/>
+    <message name="9" receiveEvent="//@root.30/@fragment.17" sendEvent="//@root.30/@fragment.16" signature="//@ownedMember.31/@ownedOperation.1"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="1OUT" covered="//@root.30/@lifeline.0" sendMessage="//@root.30/@message.0"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="1IN" covered="//@root.30/@lifeline.1" receiveMessage="//@root.30/@message.0"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="2OUT" covered="//@root.30/@lifeline.0" sendMessage="//@root.30/@message.1"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="2IN" covered="//@root.30/@lifeline.2" receiveMessage="//@root.30/@message.1"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="3OUT" covered="//@root.30/@lifeline.0" sendMessage="//@root.30/@message.2"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="3IN" covered="//@root.30/@lifeline.3" receiveMessage="//@root.30/@message.2"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="4OUT" covered="//@root.30/@lifeline.0" sendMessage="//@root.30/@message.3"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="4IN" covered="//@root.30/@lifeline.1" receiveMessage="//@root.30/@message.3"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="5OUT" covered="//@root.30/@lifeline.0" sendMessage="//@root.30/@message.4"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="5IN" covered="//@root.30/@lifeline.1" receiveMessage="//@root.30/@message.4"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="6OUT" covered="//@root.30/@lifeline.0" sendMessage="//@root.30/@message.5"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="6IN" covered="//@root.30/@lifeline.1" receiveMessage="//@root.30/@message.5"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="7OUT" covered="//@root.30/@lifeline.1" sendMessage="//@root.30/@message.6"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="7IN" covered="//@root.30/@lifeline.2" receiveMessage="//@root.30/@message.6"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="8OUT" covered="//@root.30/@lifeline.2" sendMessage="//@root.30/@message.7"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="8IN" covered="//@root.30/@lifeline.2" receiveMessage="//@root.30/@message.7"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="9OUT" covered="//@root.30/@lifeline.2" sendMessage="//@root.30/@message.8"/>
+    <fragment xsi:type="uml2:EventOccurrence" name="9IN" covered="//@root.30/@lifeline.2" receiveMessage="//@root.30/@message.8"/>
+  </root>
+</uml2:Model>

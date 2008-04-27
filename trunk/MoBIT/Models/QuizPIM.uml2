@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml2:Model xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:uml2="uml2">
+  <ownedMember xsi:type="uml2:Class" name="System" extension="//@ownedMember.7"/>
+  <ownedMember xsi:type="uml2:Class" name="Quiz" extension="//@ownedMember.9">
+    <ownedAttribute name="initialTime" qualifiedName="" default=""/>
+    <ownedAttribute name="acumulatedTime"/>
+    <ownedAttribute name="status" type="//@root.0"/>
+    <ownedAttribute name="result" type="//@ownedMember.4"/>
+    <ownedAttribute name="numberOfQuestions"/>
+    <ownedOperation name="start"/>
+    <ownedOperation name="pause"/>
+    <ownedOperation name="help"/>
+    <ownedOperation name="abort"/>
+    <ownedOperation name="setPartialResult" visibility="private">
+      <formalParameter name="r" type="//@ownedMember.4"/>
+    </ownedOperation>
+    <ownedOperation name="getpartialResult">
+      <ownedParameter name="res" type="//@ownedMember.4" direction="return"/>
+    </ownedOperation>
+    <ownedOperation name="configure"/>
+    <ownedOperation name="answerQuestion">
+      <formalParameter name="q" type="//@ownedMember.6"/>
+      <ownedParameter name="userAnswer"/>
+    </ownedOperation>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="QuizManager" extension="//@ownedMember.8">
+    <ownedAttribute name="quizesResult"/>
+    <ownedAttribute name="numberOfQuizes"/>
+    <ownedOperation name="schedulerOfQuizes">
+      <ownedParameter name="quizes"/>
+    </ownedOperation>
+    <ownedOperation name="createUserProfile">
+      <formalParameter name="results"/>
+    </ownedOperation>
+    <ownedOperation name="evaluateResult">
+      <formalParameter name="numberOfQuestions"/>
+      <formalParameter name="result"/>
+    </ownedOperation>
+    <ownedOperation name="evaluateFinalResult">
+      <formalParameter name="numberOfQuestions"/>
+      <formalParameter name="results"/>
+    </ownedOperation>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="QuestionGenerator" extension="//@ownedMember.10">
+    <ownedOperation/>
+    <ownedOperation/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="Result">
+    <ownedOperation/>
+    <ownedOperation/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="CategoryResult"/>
+  <ownedMember xsi:type="uml2:Class" name="Question"/>
+  <ownedMember xsi:type="uml2:Extension" name="Ext Sy" metaclass="//@ownedMember.0">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd Sy" type="//@ownedMember.27"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" name="Ext QM" metaclass="//@ownedMember.2">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd QM" type="//@ownedMember.24"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" name="Ext Qz" metaclass="//@ownedMember.1">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd Qz" type="//@ownedMember.24"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" name="Ext QG" metaclass="//@ownedMember.3">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd QG" type="//@ownedMember.24"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.17" name="Ext_Ass Sy-QZ">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd_Ass Sy-QZ" type="//@ownedMember.26"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.18" name="Ext_Ass Sy-QM">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd_Ass Sy-QM" type="//@ownedMember.26"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.19" name="Ext_Ass QM-QZ">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd_Ass QM-QZ" type="//@ownedMember.25"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Extension" owner="//@ownedMember.20" name="Ext_Ass QZ-QG">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="ExtEnd_Ass QZ-QG" type="//@ownedMember.25"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Enumeration" name="CategoryKind">
+    <ownedLiteral name="network"/>
+    <ownedLiteral name="softwareEngineenring"/>
+    <ownedLiteral name="dataBase"/>
+    <ownedLiteral name="hardwareEngineenring"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Enumeration" name="StatusKind">
+    <ownedLiteral name="ready"/>
+    <ownedLiteral name="running"/>
+    <ownedLiteral name="helping"/>
+    <ownedLiteral name="ending"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Association" ownedElement="//@ownedMember.11" name="Sy-Qz" memberEnd="//@root.1 //@root.6" navigableOwnedEnd="//@root.6"/>
+  <ownedMember xsi:type="uml2:Association" ownedElement="//@ownedMember.12" name="Sy-QM" memberEnd="//@root.2 //@root.4" navigableOwnedEnd="//@root.4"/>
+  <ownedMember xsi:type="uml2:Association" ownedElement="//@ownedMember.13" name="QM-Qz" memberEnd="//@root.5 //@root.7" navigableOwnedEnd="//@root.7"/>
+  <ownedMember xsi:type="uml2:Association" ownedElement="//@ownedMember.14" name="Qz-QG" memberEnd="//@root.8 //@root.11" navigableOwnedEnd="//@root.11"/>
+  <ownedMember xsi:type="uml2:Association" name="Qz-R" memberEnd="//@root.9 //@root.14" navigableOwnedEnd="//@root.14"/>
+  <ownedMember xsi:type="uml2:Association" name="R-RC" memberEnd="//@root.15 //@root.16" navigableOwnedEnd="//@root.16"/>
+  <ownedMember xsi:type="uml2:Association" name="QG-Q" memberEnd="//@root.12 //@root.13" navigableOwnedEnd="//@root.13"/>
+  <ownedMember xsi:type="uml2:Stereotype" name="Component"/>
+  <ownedMember xsi:type="uml2:Stereotype" name="acquires"/>
+  <ownedMember xsi:type="uml2:Stereotype" name="creates"/>
+  <ownedMember xsi:type="uml2:Stereotype" name="Context"/>
+  <ownedMember xsi:type="uml2:Interaction" name="testCase1"/>
+  <ownedMember xsi:type="uml2:Interaction" name="testCase2"/>
+  <ownedMember xsi:type="uml2:Interaction" name="testCase1"/>
+  <root xsi:type="uml2:Enumeration" name="StatusKind">
+    <ownedLiteral name="ready"/>
+    <ownedLiteral name="running"/>
+    <ownedLiteral name="helping"/>
+    <ownedLiteral name="ending"/>
+  </root>
+  <root xsi:type="uml2:Property" name="Sy1" type="//@ownedMember.0" association="//@ownedMember.17"/>
+  <root xsi:type="uml2:Property" name="Sy2" type="//@ownedMember.0" association="//@ownedMember.18"/>
+  <root xsi:type="uml2:Property" name="Sy3" type="//@ownedMember.0"/>
+  <root xsi:type="uml2:Property" name="QM1" type="//@ownedMember.2" association="//@ownedMember.18"/>
+  <root xsi:type="uml2:Property" name="QM2" type="//@ownedMember.2" association="//@ownedMember.19"/>
+  <root xsi:type="uml2:Property" name="QZ1" type="//@ownedMember.1" association="//@ownedMember.17"/>
+  <root xsi:type="uml2:Property" name="QZ2" type="//@ownedMember.1" association="//@ownedMember.19"/>
+  <root xsi:type="uml2:Property" name="QZ3" type="//@ownedMember.1" association="//@ownedMember.20"/>
+  <root xsi:type="uml2:Property" name="QZ4" type="//@ownedMember.1" association="//@ownedMember.21"/>
+  <root xsi:type="uml2:Property" name="QG1" type="//@ownedMember.3"/>
+  <root xsi:type="uml2:Property" name="QG2" type="//@ownedMember.3" association="//@ownedMember.20"/>
+  <root xsi:type="uml2:Property" name="QG3" type="//@ownedMember.3" association="//@ownedMember.23"/>
+  <root xsi:type="uml2:Property" name="Q" type="//@ownedMember.6" association="//@ownedMember.23"/>
+  <root xsi:type="uml2:Property" name="R1" type="//@ownedMember.4" association="//@ownedMember.21"/>
+  <root xsi:type="uml2:Property" name="R2" type="//@ownedMember.4" association="//@ownedMember.22"/>
+  <root xsi:type="uml2:Property" name="CR" type="//@ownedMember.5" association="//@ownedMember.22"/>
+  <root xsi:type="uml2:StateMachine">
+    <region>
+      <subvertex xsi:type="uml2:State" name="ready"/>
+      <subvertex xsi:type="uml2:State" name="running"/>
+      <subvertex xsi:type="uml2:State" name="helping"/>
+      <subvertex xsi:type="uml2:State" name="ending"/>
+    </region>
+  </root>
+</uml2:Model>
