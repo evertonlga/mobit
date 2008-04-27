@@ -1,0 +1,354 @@
+module UML2BIT; -- Module Template
+create OUT : UML2 from IN : UML2;
+
+rule createModel{
+	from m: UML2!Model
+	to model: UML2!Model(
+		root <- Set{}	
+	)
+	do{
+		self.createClassOfTest(model);
+	} 
+}
+
+rule createClassOfTest (model: UML2!Model){
+	 	
+	--from cont:UML2!Class(cont.extension->collect(o | o.ownedEnd)->flatten()->exists(t | t.type.name = 'Context'))
+	using{
+		cont:Set(UML2!Class) = UML2!Class->allInstances()->select(c | c.extension->size()>0)->select(c | c.extension->exists (o | o.ownedEnd->exists(t | t.type.name = 'Context')))->first();
+		
+		--x : UML2!Property = cont.extension->collect(o | o.ownedEnd)->flatten()->exists(t | t.type.name = 'Context');
+		v1 : Sequence(UML2!Property) = UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = cont))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> cont);
+		v2 : Sequence(String) = UML2!Property->allInstances()->select( p | UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = cont))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> cont)->includes(p))->collect(p|p.type)->collect(n|n.name) ;
+
+		server : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->select(a | a.navigableOwnedEnd->notEmpty())->collect(a|a.navigableOwnedEnd)->flatten()->collect(m|m.type)->first();
+		client : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->collect(a|a.memberEnd)->flatten()->collect(m|m.type)->excluding(server)->first();
+
+	}
+	-- Criação da classe Testing do Client
+	to subc:UML2!Class(
+		superClass <- client,
+		generalization <- genc,
+		name <- 'Testing' + client.name,
+		ownedOperation <- Set{oo1,oo2,oo3},
+		extension <- cExt
+	),
+	genc:UML2!Generalization(
+		specific <- subc,
+		general <- subc
+	),
+	oo1:UML2!Operation(
+		name <- 'setTester',
+		visibility <- #public,
+		ownedParameter <- param1
+	),
+	
+	oo2:UML2!Operation(
+		name <- 'setServer',
+		visibility <- #public,
+		ownedParameter <- param2
+	),
+	
+	oo3:UML2!Operation(
+		name <- 'performedTest',
+		visibility <- #public
+	),
+		
+	param1:UML2!Parameter(
+		name <- 'tester',
+		type <- sTester
+	),
+		
+	param2:UML2!Parameter(
+		name <- 'server',
+		type <- subs
+	),
+		
+	cExt:UML2!Extension(
+		ownedEnd <- coe
+	),
+	coe:UML2!ExtensionEnd(
+		type <- ct
+	),
+
+	-- Criação da classe Tester
+	sTester:UML2!Class(
+		name <- server.name +  'Tester',
+		ownedOperation <- Set{ooTester1},--, testCases},
+		ownedAttribute<- Set{atrib},
+		extension <- cExtTester		
+	),
+	ooTester1:UML2!Operation(
+		name <- 'executeTest',
+		ownedParameter <- Set{par},
+		visibility <- #public
+	),
+			
+	par:UML2!Parameter(
+		name <- 'testable',
+		type <- subs
+	),
+	
+	cExtTester:UML2!Extension(
+		ownedEnd <- coeTester
+	),
+	coeTester:UML2!ExtensionEnd(
+		type <- ct
+	),
+	ct:UML2!Stereotype(
+		name <- 'TestingComponent'
+	),
+	as:UML2!Stereotype(
+		name <- 'acquires'
+	),
+	assoc1: UML2!Association(
+		owner <- aE,
+		memberEnd <- Set{prop11, prop12},
+		navigableOwnedEnd <- Set{prop12}
+	),
+	prop11: UML2!Property(
+		type <- subc
+	),
+	prop12: UML2!Property(
+		type <- sTester
+	),
+	aE:UML2!Extension(
+		ownedEnd <- aEE
+	),
+	aEE:UML2!ExtensionEnd(
+		type <- as
+	),
+	assoc2: UML2!Association(
+		owner <- aE2,
+		memberEnd <- Set{prop21, prop22},
+		navigableOwnedEnd <- Set{prop22}
+	),
+	prop21: UML2!Property(
+		type <- sTester
+	),
+	prop22: UML2!Property(
+		type <- subs
+	),
+	aE2:UML2!Extension(
+		ownedEnd <- aEE2
+	),
+	aEE2:UML2!ExtensionEnd(
+		type <- as
+	),
+	
+	atrib: UML2!Property(
+		name<- 'arbiter',
+		type<- arbiter
+	),
+	
+--	-- Criacao da classe Arbiter
+	arbiter:UML2!Class(
+		name <- 'Arbiter',
+		ownedOperation <- Set{ooArbiter1, ooArbiter2, ooArbiter3}
+	),
+		
+	ooArbiter1:UML2!Operation(
+		name <- 'getVerdict',
+		ownedParameter <- paramGetVeredict,
+		visibility <- #public
+	),
+		
+	ooArbiter2:UML2!Operation(
+		name <- 'setVerdict',
+		visibility <- #public,
+		ownedParameter <- paramSetVeredict
+	),
+		
+	paramGetVeredict:UML2!Parameter(
+		type <- verdict,
+		direction <- #return
+	),
+	
+	ooArbiter3:UML2!Operation(
+		name <- 'definesParcialVerdict',
+		visibility <- #public
+	),
+		
+	paramSetVeredict:UML2!Parameter(
+		type <- boolType
+	),	
+	
+	boolType: UML2!PrimitiveType,
+	
+	-- Criação do Enumeration Verdict
+	verdict: UML2!Enumeration(
+		name<- 'Verdict',
+		ownedLiteral <- Set{pass,fail,inconclusive, error}
+	),
+		
+	pass : UML2!EnumerationLiteral(
+		name <- 'pass'
+	),
+		
+	fail : UML2!EnumerationLiteral(
+		name <- 'fail'
+	),
+		
+	inconclusive : UML2!EnumerationLiteral(
+		name <- 'inconclusive'
+	),
+
+	error : UML2!EnumerationLiteral(
+		name <- 'error'
+	),
+	
+   --  Criação da classe Testable do sever
+	subs:UML2!Class(
+		superClass <- server,
+		generalization <- gens,
+		name <- 'Testable' + server.name,
+		extension <- cExtS,
+		ownedOperation <- Set{}--opsIsIn,opsSetTo}
+	),
+	gens:UML2!Generalization(
+		specific <- subs,
+		general <- subs
+	),
+	cExtS:UML2!Extension(
+		ownedEnd <- coeS
+	),
+	coeS:UML2!ExtensionEnd(
+		type <- ct
+	)
+	
+	do{	
+--		--client.oclIsTypeOf(UML2!Class).toString().println();
+--		cont.toString().println();
+		for (op in UML2!Interaction->allInstances()){
+			self.createOperationTestCase(op, sTester )	;
+		}
+		
+		for (state in UML2!State->allInstances()){
+			self.createOperationOfChecking(subs,state, model);
+			self.createOperationOfSetting(subs,state, model);
+		}
+		model.root <- model.root->including(subc)->including(sTester)->including(arbiter)
+		->including(verdict)->including(subs)->including(cExt)->including(cExtTester)->including(aE)
+		->including(aE2)->including(cExtS)->including(ct)->including(as)
+		->including(assoc1)->including(prop11)->including(prop12)->including(assoc2)
+		->including(prop21)->including(prop22)->including(atrib)->including(boolType);
+	}
+}
+
+rule createOperationTestCase(i: UML2!Interaction, class: UML2!Class ){
+	to oo : UML2!Operation(
+			name <- i.name	
+	)
+	do{
+		class.ownedOperation <- class.ownedOperation->including(oo);
+	}
+}
+
+-- Criação dos metodos de checagem da classe Testable do sever
+rule createOperationOfChecking(class : UML2!Class, state: UML2!State, model: UML2!Model){
+	to op: UML2!Operation (
+			name <- 'isIn'+state.name,
+			ownedParameter <- paramBool,
+			ownedElement <- Set{extTestInter,extTesting,extStateChecking}
+		),
+		
+		paramBool:UML2!Parameter(
+			type <- boolType,
+			direction <- #return
+		),
+		
+		boolType: UML2!PrimitiveType,
+		
+		extTestInter: UML2!Extension(
+			ownedEnd<- extEndTestInter
+		),
+		
+		extEndTestInter: UML2!ExtensionEnd(
+			type<- sterTestInter
+		),
+		
+		sterTestInter: UML2!Stereotype(
+			name <- 'testing interface'		
+		),
+		
+		extTesting: UML2!Extension(
+			ownedEnd<- extEndTesting
+		),
+		
+		extEndTesting: UML2!ExtensionEnd(
+			type<- sterTesting
+		),
+		
+		sterTesting: UML2!Stereotype(
+			name <- 'testing'		
+		),
+		
+		extStateChecking: UML2!Extension(
+			ownedEnd<- extEndStateChecking
+		),
+		
+		extEndStateChecking: UML2!ExtensionEnd(
+			type<- sterStateChecking
+		),
+		
+		sterStateChecking: UML2!Stereotype (
+			name <- 'stateChecking'		
+		)
+	do{
+		model.root <- model.root->including(extTestInter)->including(sterTestInter)
+		->including(extTesting)->including(sterTesting)->including(extStateChecking)
+		->including(sterStateChecking)->including(boolType);
+		class.ownedOperation <- class.ownedOperation->including(op);
+	}
+}
+
+-- Criação dos metodos de set da classe Testable do sever
+rule createOperationOfSetting(class : UML2!Class, state : UML2!State, model: UML2!Model){
+	to op: UML2!Operation (
+		name <- 'setTo'+state.name,
+		ownedElement <- Sequence{extTestInter,extTesting,extStateSetting}
+			
+	),
+		
+	extTestInter: UML2!Extension (
+		ownedEnd<- extEndTestInter
+	),
+		
+	extEndTestInter: UML2!ExtensionEnd(
+		type<- sterTestInter
+	),
+		
+	sterTestInter: UML2! Stereotype(
+		name <- 'testing interface'		
+	),
+		
+	extTesting: UML2!Extension(
+		ownedEnd<- extEndTesting
+	),
+		
+	extEndTesting: UML2!ExtensionEnd(
+		type<- sterTesting
+	),
+		
+	sterTesting: UML2! Stereotype(
+		name <- 'testing'		
+	),
+		
+	extStateSetting: UML2!Extension(
+		ownedEnd<- extEndStateSetting
+	),
+		
+	extEndStateSetting: UML2!ExtensionEnd(
+		type<- sterStateSetting
+	),
+		
+	sterStateSetting: UML2! Stereotype(
+		name <- 'stateSetting'		
+	)
+	do{
+		model.root <- model.root->including(extTestInter)->including(sterTestInter)
+		->including(extTesting)->including(sterTesting)->including(extStateSetting)
+		->including(sterStateSetting);
+		class.ownedOperation <- class.ownedOperation->including(op);
+	}
+}

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml2:Model xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:uml2="uml2">
+  <ownedMember xsi:type="uml2:Class" name="LoanManager">
+    <ownedOperation name="closeAccount"/>
+    <ownedOperation name="loanItem"/>
+    <ownedOperation name="printLoanInformation"/>
+    <ownedOperation name="reloanItem"/>
+    <ownedOperation name="reserveItem"/>
+    <ownedOperation name="returnItem"/>
+    <ownedOperation name="setAccount"/>
+    <ownedOperation name="setitemManager"/>
+    <ownedOperation name="setReportWriter"/>
+    <ownedOperation name="configure"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="ReportWriter">
+    <ownedOperation name="print"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="ItemManager">
+    <ownedOperation name="getItem"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="Assembler" extension="//@ownedMember.4"/>
+  <ownedMember xsi:type="uml2:Extension" name="ExtAss" metaclass="//@ownedMember.3">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="extEndAss" type="//@root.10"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Class" name="Library">
+    <ownedOperation name="setLoanManager"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Association" owner="//@ownedMember.7" name="LM-RW" memberEnd="//@root.0 //@root.4" navigableOwnedEnd="//@root.4"/>
+  <ownedMember xsi:type="uml2:Extension" ownedElement="//@ownedMember.6 //@ownedMember.8 //@ownedMember.11" name="ExtAcquires">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="extEndAcquires" type="//@root.11"/>
+  </ownedMember>
+  <ownedMember xsi:type="uml2:Association" owner="//@ownedMember.7" name="LM-IM" memberEnd="//@root.1 //@root.5" navigableOwnedEnd="//@root.5"/>
+  <ownedMember xsi:type="uml2:Association" owner="//@root.13" name="Ass-LM" memberEnd="//@root.6 //@root.2" navigableOwnedEnd="//@root.2"/>
+  <ownedMember xsi:type="uml2:Association" owner="//@root.13" name="Ass-Lib" memberEnd="//@root.7 //@root.8" navigableOwnedEnd="//@root.8"/>
+  <ownedMember xsi:type="uml2:Association" owner="//@ownedMember.7" name="Lib-LM" memberEnd="//@root.9 //@root.3" navigableOwnedEnd="//@root.3"/>
+  <ownedMember xsi:type="uml2:Interaction" name="testCase1"/>
+  <ownedMember xsi:type="uml2:Interaction" name="testCase2"/>
+  <root xsi:type="uml2:Property" name="PropLM1" type="//@ownedMember.0" association="//@ownedMember.6"/>
+  <root xsi:type="uml2:Property" name="PropLM2" type="//@ownedMember.0" association="//@ownedMember.8"/>
+  <root xsi:type="uml2:Property" name="PropLM3" type="//@ownedMember.0" association="//@ownedMember.9"/>
+  <root xsi:type="uml2:Property" name="PropLM4" type="//@ownedMember.0" association="//@ownedMember.11"/>
+  <root xsi:type="uml2:Property" name="PropRW" type="//@ownedMember.1" association="//@ownedMember.6"/>
+  <root xsi:type="uml2:Property" name="PropIM" type="//@ownedMember.2" association="//@ownedMember.8"/>
+  <root xsi:type="uml2:Property" name="PropAss1" type="//@ownedMember.3" association="//@ownedMember.9"/>
+  <root xsi:type="uml2:Property" name="PropAss2" type="//@ownedMember.3" association="//@ownedMember.10"/>
+  <root xsi:type="uml2:Property" name="PropLib1" type="//@ownedMember.5" association="//@ownedMember.10"/>
+  <root xsi:type="uml2:Property" name="PropLib2" type="//@ownedMember.5" association="//@ownedMember.11"/>
+  <root xsi:type="uml2:Stereotype" name="Context"/>
+  <root xsi:type="uml2:Stereotype" name="acquires"/>
+  <root xsi:type="uml2:Stereotype" name="creates"/>
+  <root xsi:type="uml2:Extension" ownedElement="//@ownedMember.9 //@ownedMember.10" name="ExtCreates">
+    <ownedEnd xsi:type="uml2:ExtensionEnd" name="extEndCreates" type="//@root.12"/>
+  </root>
+  <root xsi:type="uml2:StateMachine">
+    <region>
+      <subvertex xsi:type="uml2:State" name="Unconfigured"/>
+      <subvertex xsi:type="uml2:State" name="AccountIdentified"/>
+      <subvertex xsi:type="uml2:State" name="Neutral"/>
+    </region>
+  </root>
+</uml2:Model>

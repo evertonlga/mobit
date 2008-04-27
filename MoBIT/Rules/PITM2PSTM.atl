@@ -1,0 +1,1615 @@
+module PITM2PSTM; -- Module Template
+create OUT : JavaAbstractSyntax from IN : UML2; 
+
+helper def : nameOfOperation (e : UML2!EventOccurrence): 
+	String = e.receiveMessage.signature.name; 
+     
+rule CreateClassTesting{ 
+	from class:UML2!Class(class.ownedOperation->exists(o | o.name = 'setTester'))
+	using{		
+		events : Sequence(UML2!EventOccurrence) = UML2!Interaction->allInstances()->select(n | n.name = 'Test Cases Execution').asSequence()->first().fragment;
+		eventsTL: Sequence(UML2!EventOccurrence) = events->select(e | e.covered->first().name = class.name);
+		eventsTL2:Sequence(UML2!EventOccurrence)=eventsTL->select(a | a.receiveMessage.oclIsUndefined() <> true);
+		--Seleciona os eventos que chegam a TestingLibrary, exceto a que cria o objeto TestingLibrary
+		eventsTL3:Sequence(UML2!EventOccurrence)=eventsTL2->select(a | a.receiveMessage.signature.oclIsUndefined() <> true);		
+		-- Retornar a classe contexto
+		contx: Set(UML2!Class) = UML2!Class->allInstances()->select(p | p.extension->collect(o | o.ownedEnd)->flatten()->exists(t | t.type.name = 'Context'))->first();
+		v1 : Sequence(UML2!Property) = UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = contx))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> contx);
+		v2 : Sequence(String) = UML2!Property->allInstances()->select( p | UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = contx))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> contx)->includes(p))->collect(p|p.type)->collect(n|n.name) ;
+
+		server : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->select(a | a.navigableOwnedEnd->notEmpty())->collect(a|a.navigableOwnedEnd)->flatten()->collect(m|m.type)->first();
+	 	client : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->collect(a|a.memberEnd)->flatten()->collect(m|m.type)->excluding(server)->first();
+		
+--		-- Retornar o a classe TestingLibrary
+		TL: UML2!Class = UML2!Class->allInstances()->select(c | c.superClass->includes(client))->first();
+		-- Retornar o tester
+	}
+	--Criação da classe Java TestingClient
+	to typeTest:JavaAbstractSyntax!TypeDeclaration(
+		name<-nameClass,
+		superclassType <- typeClient,
+		bodyDeclarations <- Set{}
+
+	),
+	
+	nameClass:JavaAbstractSyntax!SimpleName(
+		identifier<- class.name
+	),
+	
+	typeClient: JavaAbstractSyntax!SimpleType(
+		name <- TypeClientName
+	),
+	
+	TypeClientName: JavaAbstractSyntax!SimpleName(
+		identifier<- client.name
+	)
+	
+	do{
+		events.toString().println();		
+		eventsTL.toString().println();		
+		self.createAtributesTesting(typeTest);
+		for (e in eventsTL3){
+			if (thisModule.nameOfOperation(e)='setTester')	
+				self.createMethodSetTester(e, typeTest);
+			else if (thisModule.nameOfOperation(e)='setServer')
+				self.createMethodSetServer(e, typeTest);
+			else self.createMethodPerform(e, typeTest);
+		}
+		
+	}
+	
+}
+
+rule createAtributesTesting(class:JavaAbstractSyntax!TypeDeclaration ){
+	using{
+		contx: Set(UML2!Class) = UML2!Class->allInstances()->select(p | p.extension->collect(o | o.ownedEnd)->flatten()->exists(t | t.type.name = 'Context'))->first();
+		
+		v1: Sequence(UML2!Property) = UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = contx))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> contx);
+		v2: Sequence(String) = UML2!Property->allInstances()->select( p | UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = contx))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> contx)->includes(p))->collect(p|p.type)->collect(n|n.name);
+				
+		server :UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->select(a | a.navigableOwnedEnd->notEmpty())->collect(a|a.navigableOwnedEnd)->flatten()->collect(m|m.type)->first(); 
+		client : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->collect(a|a.memberEnd)->flatten()->collect(m|m.type)->excluding(server)->first();
+		testable: UML2!Class = UML2!Class->allInstances()->select(c | c.superClass->size()>0)->select(c | c.superClass->includes(server))->first();
+		TL: UML2!Class = UML2!Class->allInstances()->select(c | c.superClass->size()>0)->select(n | n.superClass->first().name = client.name)->first();
+		tester: UML2!Class = UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = TL))->collect(m | m.memberEnd->select(t | t.type <> TL))->flatten()->first().type;
+		
+
+	}
+	to -- Inicialização dos atributos da classe
+	attribute1: JavaAbstractSyntax!FieldDeclaration(
+		fragments<- Sequence{}->including(var1)
+	),
+	
+	var1: JavaAbstractSyntax!VariableDeclarationStatement(
+		type <- typeServer,
+		fragments <- Set{ at1Exp },
+		modifiers<- visibylity
+	),
+	
+	typeServer:  JavaAbstractSyntax!SimpleType(
+		name <- TypeServerName
+	),
+	
+	TypeServerName: JavaAbstractSyntax!SimpleName(
+		identifier<- testable.name
+	),
+	
+	visibylity: JavaAbstractSyntax!Modifier(
+		private <- true
+	),
+	
+	at1Exp:JavaAbstractSyntax!VariableDeclarationFragment(
+		name <- simpleNameAt1
+	),
+		
+	simpleNameAt1: JavaAbstractSyntax!SimpleName(
+		identifier<- 'server'
+	),
+	
+	attribute2: JavaAbstractSyntax!FieldDeclaration(
+		fragments<- Sequence{}->including(var2)
+	),
+	
+	var2: JavaAbstractSyntax!VariableDeclarationStatement(
+		type <- typeTester,
+		fragments <- Set{ at2Exp },
+		modifiers<- visibylity
+	),
+	
+	typeTester:  JavaAbstractSyntax!SimpleType(
+		name <- TypeTesterName
+	),
+	
+	TypeTesterName: JavaAbstractSyntax!SimpleName(
+		identifier<- tester.name
+	),
+		
+	at2Exp:JavaAbstractSyntax!VariableDeclarationFragment(
+		name <- simpleNameAt2
+	),
+		
+	simpleNameAt2: JavaAbstractSyntax!SimpleName(
+		identifier<- 'tester'
+	),
+	
+	attribute3: JavaAbstractSyntax!FieldDeclaration(
+		fragments<- Sequence{}->including(var3)
+	),
+	
+	var3: JavaAbstractSyntax!VariableDeclarationStatement(
+		type <- typeVerdict,
+		fragments <- Set{ at3Exp },
+		modifiers<- visibylity
+	),
+	
+	typeVerdict:  JavaAbstractSyntax!SimpleType(
+		name <- TypeVerdictName
+	),
+	
+	TypeVerdictName: JavaAbstractSyntax!SimpleName(
+		identifier<- 'Verdict'
+	),
+		
+	at3Exp:JavaAbstractSyntax!VariableDeclarationFragment(
+		name <- simpleNameAt3
+	),
+		
+	simpleNameAt3: JavaAbstractSyntax!SimpleName(
+		identifier<- 'verdict'
+	)
+	do{
+		class.bodyDeclarations <- class.bodyDeclarations->including(attribute1)->including(attribute2)->including(attribute3);
+	}
+}
+
+ --Cria metodo setTester
+rule createMethodSetTester( e: UML2!EventOccureence, typeTest: JavaAbstractSyntax!TypeDeclaration){
+using{
+	contx: Set(UML2!Class) = UML2!Class->allInstances()->select(p | p.extension->collect(o | o.ownedEnd)->flatten()->exists(t | t.type.name = 'Context'))->first();
+	v1 : Sequence(UML2!Property) = UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = contx))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> contx);
+	v2 : Sequence(String) = UML2!Property->allInstances()->select( p | UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = contx))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> contx)->includes(p))->collect(p|p.type)->collect(n|n.name) ;
+	server : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->select(a | a.navigableOwnedEnd->notEmpty())->collect(a|a.navigableOwnedEnd)->flatten()->collect(m|m.type)->first();
+	client : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->collect(a|a.memberEnd)->flatten()->collect(m|m.type)->excluding(server)->first();
+	
+	TL: UML2!Class = UML2!Class->allInstances()->select(c | c.superClass->size()>0)->select(n | n.superClass->first().name = client.name)->first();
+	tester: UML2!Class = UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = TL))->collect(m | m.memberEnd->select(t | t.type <> TL))->flatten()->first().type;
+	
+		
+}
+to method: JavaAbstractSyntax!MethodDeclaration (
+		name <- simpleName , 
+	 	body <- blockMeth,
+		modifiers <- modMeth,
+		returnType <- voidType,
+		parameters <- testerParameter
+	),
+	
+	voidType: JavaAbstractSyntax!PrimitiveType(
+		code <- 'void'
+	),
+	
+	simpleName: JavaAbstractSyntax!SimpleName(
+		identifier<-'setTester'
+	),
+	
+	modMeth: JavaAbstractSyntax!Modifier(
+	 	public <- true
+	),
+	
+	blockMeth: JavaAbstractSyntax!Block (
+		statements<- Set{}->including(declaration)
+	),
+	
+	declaration: JavaAbstractSyntax!Assignment(
+		leftHandSide<- var,
+		operator<- #ASSIGN,
+		rightHandSide<- value
+	),
+	
+	var:JavaAbstractSyntax!SimpleName(
+		identifier<-'tester'
+	),
+	
+	value: JavaAbstractSyntax!StringLiteral(
+		literalValue <- 't'
+	),
+--	
+	testerParameter: JavaAbstractSyntax!SingleVariableDeclaration(
+		name <- nameParameter,
+		type <- testerType
+	),
+	
+	nameParameter: JavaAbstractSyntax!SimpleName(
+		identifier<- 't'
+	),
+	
+	testerType:  JavaAbstractSyntax!SimpleType(
+		name <- testerTypeName
+	),
+	
+	testerTypeName: JavaAbstractSyntax!SimpleName(
+		identifier<- tester.name
+	)
+		
+	do{
+		tester.name.toString().println();
+		typeTest.bodyDeclarations<-typeTest.bodyDeclarations->including(method);
+	}
+}
+-- Cria metodo setServer
+rule createMethodSetServer( e: UML2!EventOccureence, typeTest: JavaAbstractSyntax!TypeDeclaration ){
+using{
+	contx: Set(UML2!Class) = UML2!Class->allInstances()->select(p | p.extension->collect(o | o.ownedEnd)->flatten()->exists(t | t.type.name = 'Context'))->first();
+	v1 : Sequence(UML2!Property) = UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = contx))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> contx);
+	v2 : Sequence(String) = UML2!Property->allInstances()->select( p | UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = contx))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> contx)->includes(p))->collect(p|p.type)->collect(n|n.name) ;
+	server : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->select(a | a.navigableOwnedEnd->notEmpty())->collect(a|a.navigableOwnedEnd)->flatten()->collect(m|m.type)->first();
+	client : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->collect(a|a.memberEnd)->flatten()->collect(m|m.type)->excluding(server)->first();
+	testable: UML2!Class = UML2!Class->allInstances()->select(c | c.superClass->size()>0)->select(c | c.superClass->includes(server))->first();
+	TL: UML2!Class = UML2!Class->allInstances()->select(c | c.superClass->size()>0)->select(n | n.superClass->first().name = client.name)->first();
+	tester: UML2!Class = UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = TL))->collect(m | m.memberEnd->select(t | t.type <> TL))->flatten()->first().type;
+	
+}
+to method: JavaAbstractSyntax!MethodDeclaration (
+		name <- simpleName , 
+	 	body <- blockMeth,
+		modifiers <- modMeth,
+		returnType <- voidType,
+		parameters <- testerParameter
+	),
+	
+	voidType: JavaAbstractSyntax!PrimitiveType(
+		code <- 'void'
+	),
+	
+	simpleName: JavaAbstractSyntax!SimpleName(
+		identifier<-'setServer'
+	),
+	
+	modMeth: JavaAbstractSyntax!Modifier(
+	 	public <- true
+	),
+	
+	blockMeth: JavaAbstractSyntax!Block (
+		statements<- Set{}->including(declaration)
+	),
+	
+	declaration: JavaAbstractSyntax!Assignment(
+		leftHandSide<- var,
+		operator<- #ASSIGN,
+		rightHandSide<- value
+	),
+	
+	var:JavaAbstractSyntax!SimpleName(
+		identifier<-'server'
+	),
+	
+	value: JavaAbstractSyntax!StringLiteral(
+		literalValue <- 's'
+	),
+	
+	testerParameter: JavaAbstractSyntax!SingleVariableDeclaration(
+		name <- nameParameter,
+		type <- testerType
+	),
+	
+	nameParameter: JavaAbstractSyntax!SimpleName(
+		identifier<- 's'
+	),
+	
+	testerType:  JavaAbstractSyntax!SimpleType(
+		name <- testerTypeName
+	),
+	
+	testerTypeName: JavaAbstractSyntax!SimpleName(
+		identifier<- testable.name
+	)
+		
+	do{
+		
+		typeTest.bodyDeclarations<-typeTest.bodyDeclarations->including(method);
+	}
+}
+
+-- Cria metodo perforTest
+rule createMethodPerform( e: UML2!EventOccureence, typeTest: JavaAbstractSyntax!TypeDeclaration ){
+using{
+	
+	contx: Set(UML2!Class) = UML2!Class->allInstances()->select(p | p.extension->collect(o | o.ownedEnd)->flatten()->exists(t | t.type.name = 'Context'))->first();
+	v1 : Sequence(UML2!Property) = UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = contx))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> contx);
+	v2 : Sequence(String) = UML2!Property->allInstances()->select( p | UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = contx))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> contx)->includes(p))->collect(p|p.type)->collect(n|n.name) ;
+	server : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->select(a | a.navigableOwnedEnd->notEmpty())->collect(a|a.navigableOwnedEnd)->flatten()->collect(m|m.type)->first();
+	client : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->collect(a|a.memberEnd)->flatten()->collect(m|m.type)->excluding(server)->first();
+	testable: UML2!Class = UML2!Class->allInstances()->select(c | c.superClass->size()>0)->select(c | c.superClass->includes(server))->first();
+	TL: UML2!Class = UML2!Class->allInstances()->select(c | c.superClass->size()>0)->select(n | n.superClass->first().name = client.name)->first();
+	tester: UML2!Class = UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = TL))->collect(m | m.memberEnd->select(t | t.type <> TL))->flatten()->first().type;
+}
+to method: JavaAbstractSyntax!MethodDeclaration (
+		name<- simpleName,
+		returnType <- voidType,
+		modifiers <- modMeth,
+		body <- blockTest
+	),
+	
+	modMeth: JavaAbstractSyntax!Modifier(
+	 	public <- true
+	),
+	
+	voidType: JavaAbstractSyntax!PrimitiveType(
+		code <- 'void'
+	),
+	
+	simpleName: JavaAbstractSyntax!SimpleName(
+		identifier<-'performTest'
+	),
+	
+	blockTest: JavaAbstractSyntax!Block (
+		statements<- Set{}->including(ifExpression1)--invocationMethod)
+	),
+	
+	ifExpression1:JavaAbstractSyntax!IfStatement(
+		expression<- ifCondicion1,
+		thenStatement<-ifExpression2
+	),
+	
+	ifCondicion1: JavaAbstractSyntax!InfixExpression(
+		leftOperand<- lhs,
+		operator <-#NOT_EQUALS,
+		rightOperand <- null
+	),
+	
+	ifExpression2:JavaAbstractSyntax!IfStatement(
+		expression<- ifCondicion2,
+		thenStatement<- inicVerdict
+	),
+	
+	ifCondicion2: JavaAbstractSyntax!InfixExpression(
+		leftOperand<- lh,
+		operator <-#NOT_EQUALS,
+		rightOperand <- null2
+	),
+	
+	lhs: JavaAbstractSyntax!StringLiteral(
+		literalValue<- 'server'
+	),
+	
+	lh: JavaAbstractSyntax!StringLiteral(
+		literalValue<- 'tester'
+	),
+	
+	null: JavaAbstractSyntax!NullLiteral(
+	
+	),
+	
+	null2: JavaAbstractSyntax!NullLiteral(
+	
+	),
+	
+	inicVerdict: JavaAbstractSyntax!Assignment(
+		leftHandSide <- nameVerdict,
+		operator<- #ASSIGN,
+		rightHandSide <- invocationMethod
+	),
+	
+	nameVerdict: JavaAbstractSyntax!SimpleName(
+		identifier<- 'verdict'
+	),
+	
+	invocationMethod:JavaAbstractSyntax!MethodInvocation(
+		expression <- lh,
+		name <- methodName,
+		arguments <- Set{parameter}	 
+	),
+	
+	methodName: JavaAbstractSyntax!SimpleName(
+		identifier<- 'executeTest'
+	),
+	
+	
+	parameter: JavaAbstractSyntax!SingleVariableDeclaration(
+		name <- lhs,
+		type <- testableType
+	),
+		
+	testableType:  JavaAbstractSyntax!SimpleType(
+		name <- testableTypeName
+	),
+	
+	testableTypeName: JavaAbstractSyntax!SimpleName(
+		identifier<- testable.name
+	)
+
+	do{
+		typeTest.bodyDeclarations<-typeTest.bodyDeclarations->including(method);	
+	
+	}
+}
+
+rule createTestable{
+	from s: UML2!Model
+	using{
+		cont: UML2!Class =  UML2!Class->allInstances()->select (e | e.extension->collect(o | o.ownedEnd)->flatten()->exists(t | t.type.name = 'Context'))->first();
+		v1 : Sequence(UML2!Property) = UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = cont))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> cont);
+		v2 : Sequence(String) = UML2!Property->allInstances()->select( p | UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = cont))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> cont)->includes(p))->collect(p|p.type)->collect(n|n.name) ;
+ 
+		server : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->select(a | a.navigableOwnedEnd->notEmpty())->collect(a|a.navigableOwnedEnd)->flatten()->collect(m|m.type)->first();
+		client : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->collect(a|a.memberEnd)->flatten()->collect(m|m.type)->excluding(server)->first();
+		testable: UML2!Class = UML2!Class->allInstances()->select(c | c.superClass->size()>0)->select(c | c.superClass->includes(server))->first();
+		operTestable : Set(UML2!Operation) = testable.ownedOperation;
+	}
+	to testableServer: JavaAbstractSyntax!TypeDeclaration(
+			name<- nameTestable,	
+			superclassType <- serv,
+			bodyDeclarations <- Set{}--->including(serverField)
+	),
+	nameTestable:JavaAbstractSyntax!SimpleName(
+		identifier<-'Testable'.concat(server.name)
+	),
+	
+	serv: JavaAbstractSyntax!SimpleType(
+		name <- serverTypeName
+	),
+	
+	serverTypeName: JavaAbstractSyntax!SimpleName(
+		identifier<- server.name
+	)
+	
+	do{
+		for (o in operTestable){
+			if (o.name.substring(1,4)= 'isIn') then
+				self.createMethIsIn(testableServer, o)
+			else self.createMethSetTo(testableServer, o)
+			endif;
+		}
+		
+		for (o in operTestable){
+			if (o.name.substring(1,4)= 'isIn') then
+				self.createMethIsInGeneric(testableServer, o)
+			else self.createMethSetToGeneric(testableServer, o)
+			endif;
+		}
+	}
+}
+
+rule createMethIsIn(testableServer:JavaAbstractSyntax!typeDeclaration, op : UML2!Operation ){
+	to
+	meth: JavaAbstractSyntax!MethodDeclaration(
+		name <- nameMeth,
+	 	body <- blockMeth,
+		modifiers <- modMeth,
+		returnType <- voidType,
+		returnType <- boolType
+	),
+	
+	voidType: JavaAbstractSyntax!PrimitiveType(
+		code <- 'void'
+	),
+	
+	nameMeth:JavaAbstractSyntax!SimpleName(
+	 	identifier <- op.name
+	),
+	
+	 modMeth: JavaAbstractSyntax!Modifier(
+	 	public <- true
+	 ),
+	
+	boolType: JavaAbstractSyntax!PrimitiveType(
+		code <- 'boolean'
+	),
+	
+	blockMeth: JavaAbstractSyntax!Block(
+		statements <- Sequence{}->including(methBody)
+	),
+	
+	methBody : JavaAbstractSyntax!SuperMethodInvocation(
+		name <- nameInvocMeth
+	),
+	
+	nameInvocMeth:JavaAbstractSyntax!SimpleName(
+	 	identifier <- 'getState'
+	 )
+	
+	do{
+		testableServer.bodyDeclarations <- testableServer.bodyDeclarations->including(meth);
+	}
+}
+
+
+rule createMethIsInGeneric(testableServer:JavaAbstractSyntax!typeDeclaration, op : UML2!Operation ){
+	to
+	meth: JavaAbstractSyntax!MethodDeclaration(
+		name <- nameMeth,
+       	modifiers <- modMeth,
+		returnType <- boolType
+	),
+	
+	nameMeth:JavaAbstractSyntax!SimpleName(
+	 	identifier <- op.name
+	),
+	
+	 modMeth: JavaAbstractSyntax!Modifier(
+	 	public <- true
+	 ),
+	
+	boolType: JavaAbstractSyntax!PrimitiveType(
+		code <- 'boolean'
+	)
+	
+	do{
+		testableServer.bodyDeclarations <- testableServer.bodyDeclarations->including(meth);
+	}
+}
+
+
+rule createMethSetTo(testableServer:JavaAbstractSyntax!typeDeclaration, op : UML2!Operation ){
+	using{
+		length: Integer = op.name->size();
+	}
+	to meth: JavaAbstractSyntax!MethodDeclaration(
+		name <- nameMeth,
+	 	body <- blockMeth,
+		returnType <- voidType,
+		modifiers<- modMeth
+	),
+	
+	voidType: JavaAbstractSyntax!PrimitiveType(
+		code <- 'void'
+	),
+	
+	nameMeth:JavaAbstractSyntax!SimpleName(
+	 	identifier <- op.name
+	),
+	
+	modMeth: JavaAbstractSyntax!Modifier(
+	 	public <- true
+	 ),
+	
+	blockMeth: JavaAbstractSyntax!Block(
+		statements <- Sequence{}->including(methBody)
+	),
+	
+	methBody : JavaAbstractSyntax!SuperMethodInvocation(
+		name <- nameInvocMeth,
+		arguments <- Set{argName}
+	),
+	
+	nameInvocMeth:JavaAbstractSyntax!SimpleName(
+	 	identifier <- 'setState'
+	),
+	
+	argName: JavaAbstractSyntax!StringLiteral(
+		literalValue<- op.name.substring(6,length)
+	)
+	
+	do{
+		testableServer.bodyDeclarations <- testableServer.bodyDeclarations->including(meth);
+	}
+}
+
+
+rule createMethSetToGeneric(testableServer:JavaAbstractSyntax!typeDeclaration, op : UML2!Operation ){
+	using{
+		length: Integer = op.name->size();
+	}
+	to meth: JavaAbstractSyntax!MethodDeclaration(
+		name <- nameMeth,
+		returnType <- voidType,
+	 	modifiers<- modMeth
+	),
+	
+	voidType: JavaAbstractSyntax!PrimitiveType(
+		code <- 'void'
+	),
+	
+	nameMeth:JavaAbstractSyntax!SimpleName(
+	 	identifier <- op.name
+	),
+	
+	modMeth: JavaAbstractSyntax!Modifier(
+	 	public <- true
+	 )
+	 
+	do{
+		testableServer.bodyDeclarations <- testableServer.bodyDeclarations->including(meth);
+	}
+}
+
+
+rule createTester{
+	from t: UML2!Class(t.ownedOperation->exists(o | o.name = 'executeTest'))
+	using{
+		operations: Set(UML2!Operation) = t.ownedOperation;
+		cont: UML2!Class =  UML2!Class->allInstances()->select (e | e.extension->collect(o | o.ownedEnd)->flatten()->exists(t | t.type.name = 'Context'))->first();
+		v1 : Sequence(UML2!Property) = UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = cont))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> cont);
+		v2 : Sequence(String) = UML2!Property->allInstances()->select( p | UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = cont))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> cont)->includes(p))->collect(p|p.type)->collect(n|n.name) ;
+		server : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->select(a | a.navigableOwnedEnd->notEmpty())->collect(a|a.navigableOwnedEnd)->flatten()->collect(m|m.type)->first();
+		testable: UML2!Class = UML2!Class->allInstances()->select(c | c.superClass->size()>0)->select(c | c.superClass->includes(server))->first();
+		
+		msgs : Sequence(UML2!EventOccurrence) = UML2!Interaction->allInstances()->select(n | n.name = 'Test Cases Execution').asSequence()->first().message;
+		testCases: Set(UML2!Message) =msgs->collect(e | e.sendEvent)->select(m | m.covered->first().name= t.name)->collect(m | m.sendMessage.signature);--)->flatten()->select(n | n.name = t.name);	
+		
+	} 
+	to 
+	tester: JavaAbstractSyntax!TypeDeclaration(
+		name <- nameTester,
+		bodyDeclarations <- Set{}
+	),
+	
+	nameTester:JavaAbstractSyntax!SimpleName(
+		identifier<- t.name
+	)
+	
+	do{
+		
+		self.createAttributeTester(tester);	
+		self.createExecuteTest(tester);
+		for (o in testCases){
+			self.createTestCase(tester, o);
+		}
+		
+	}
+}
+
+rule createTestCase(class: JavaAbstractSyntax!TypeDeclaration, op: UML2!Operation){
+	using{
+		interac: UML2!Interaction = UML2!Interaction->allInstances()->select(n | n.name = op.name)->first();
+		msgs: UML2!EventOccurence = interac.message;
+	}
+	to tCase:JavaAbstractSyntax!MethodDeclaration(
+		name <- nameTestCase,
+		body <- try,
+		returnType <- voidType,
+		--body <- blockTestCase,
+		modifiers <- modPUBTestCase
+	),	
+	
+	voidType: JavaAbstractSyntax!PrimitiveType(
+		code <- 'void'
+	),
+	
+	try :JavaAbstractSyntax!TryStatement(
+		body <-  blockTestCase,
+		catchClauses <- Sequence{catch, catch2}
+	),
+	
+	catch:JavaAbstractSyntax!CatchClause(
+		exception<- exception,
+		body <- arbiterInvocationSetVerdict
+	),
+	
+	exception: JavaAbstractSyntax!SingleVariableDeclaration(
+		name <- nameException,
+		type <-exceptionType
+	),
+	
+	nameException: JavaAbstractSyntax!SimpleName(
+		identifier<-'e'
+	),
+	
+	exceptionType:  JavaAbstractSyntax!SimpleType(
+		name <- exceptionTypeName
+	),
+	
+	exceptionTypeName:JavaAbstractSyntax!SimpleName(
+		identifier<-'Exception'
+	),
+	
+	arbiterInvocationSetVerdict: JavaAbstractSyntax!MethodInvocation(
+		expression <- nameArbiter,
+		name <- setVerdictName,
+		arguments <- Sequence{boolFalse, numOne}
+	),
+	
+	nameArbiter: JavaAbstractSyntax!SimpleName(
+		identifier<-'arbiter'
+	),
+	
+	setVerdictName: JavaAbstractSyntax!SimpleName(
+		identifier<- 'setVerdict'
+	),
+	
+	boolFalse: JavaAbstractSyntax!BooleanLiteral(
+		booleanValue<- false
+	),
+	
+	numOne: JavaAbstractSyntax!NumberLiteral(
+		token <- '1'
+	),
+	
+	catch2:JavaAbstractSyntax!CatchClause(
+		exception<- error,
+		body <- arbiterInvocationSetVerdict2
+	),
+	
+	error: JavaAbstractSyntax!SingleVariableDeclaration(
+		name <- nameError,
+		type <-ErrorType
+	),
+	
+	nameError: JavaAbstractSyntax!SimpleName(
+		identifier<-'r'
+	),
+	
+	ErrorType:  JavaAbstractSyntax!SimpleType(
+		name <- ErrorTypeName
+	),
+	
+	ErrorTypeName:JavaAbstractSyntax!SimpleName(
+		identifier<-'Error'
+	),
+	
+	arbiterInvocationSetVerdict2: JavaAbstractSyntax!MethodInvocation(
+		expression <- nameArbiter2,
+		name <- setVerdictName2,
+		arguments <- Sequence{boolFalse2, numTwo}
+	),
+	
+	nameArbiter2: JavaAbstractSyntax!SimpleName(
+		identifier<-'arbiter'
+	),
+	
+	setVerdictName2: JavaAbstractSyntax!SimpleName(
+		identifier<- 'setVerdict'
+	),
+	
+	boolFalse2: JavaAbstractSyntax!BooleanLiteral(
+		booleanValue<- false
+	),
+	
+	numTwo: JavaAbstractSyntax!NumberLiteral(
+		token <- '2'
+	),
+	
+	nameTestCase:JavaAbstractSyntax!SimpleName(
+		identifier<-op.name
+	),
+	
+	modPUBTestCase: JavaAbstractSyntax!Modifier(
+		public <- true,
+		static <- true
+	),
+	
+	
+	blockTestCase: JavaAbstractSyntax!Block(
+		statements <- Sequence{}
+	),
+	
+	arbdefinesPartialVeredict: JavaAbstractSyntax!MethodInvocation(
+		expression <- nameArbiter3,
+		name <- nameDefinesPartialVeredict
+	),
+	
+	nameDefinesPartialVeredict: JavaAbstractSyntax!SimpleName(
+		identifier<- 'definesPartialVeredict'
+	),
+	
+	nameArbiter3:JavaAbstractSyntax!SimpleName(
+		identifier<-'arbiter'
+	)
+	
+	do{
+		interac.toString().println();
+		msgs.toString().println();
+		for (m in msgs){
+			if (m.signature.name.substring(1,4)= 'isIn')
+				self.invocationSetVerdictInTestCase(blockTestCase,m.signature.name);
+			else self.invocationOperationInTestCase(blockTestCase,m.signature.name);
+		}
+		blockTestCase.statements<-blockTestCase.statements->including(arbdefinesPartialVeredict);
+		class.bodyDeclarations <- class.bodyDeclarations->including(tCase);	
+	}
+}
+
+rule invocationSetVerdictInTestCase(blockTestCase: JavaAbstractSyntax!Block, op:String){
+	to 
+	arbiterInvocationSetVerdict: JavaAbstractSyntax!MethodInvocation(
+		expression <- nameArbiter,
+		name <- setVerdictName,
+		arguments <- Sequence{serverInvocationOp, numZero}
+	),
+	
+	nameArbiter: JavaAbstractSyntax!SimpleName(
+		identifier<-'arbiter'
+	),
+	
+	setVerdictName: JavaAbstractSyntax!SimpleName(
+		identifier<- 'setVerdict'
+	),
+	
+	serverInvocationOp: JavaAbstractSyntax!MethodInvocation(
+		expression <- nameServer,
+		name <- opName
+	),
+	
+	nameServer: JavaAbstractSyntax!SimpleName(
+		identifier<-'server'
+	),
+	
+	opName: JavaAbstractSyntax!SimpleName(
+		identifier<- op
+	),
+	
+	numZero: JavaAbstractSyntax!NumberLiteral(
+		token <- '0'
+	)
+	
+	do{
+		blockTestCase.statements <- blockTestCase.statements->including(arbiterInvocationSetVerdict);
+	}
+}
+
+rule invocationOperationInTestCase(blockTestCase: JavaAbstractSyntax!Block, op:String){
+	to 
+	serverInvocationOp: JavaAbstractSyntax!MethodInvocation(
+		expression <- nameServer,
+		name <- opName
+	),
+	
+	nameServer: JavaAbstractSyntax!SimpleName(
+		identifier<-'server'
+	),
+	
+	opName: JavaAbstractSyntax!SimpleName(
+		identifier<- op
+	)
+	do{
+		blockTestCase.statements <- blockTestCase.statements->including(serverInvocationOp);
+	}
+}
+
+rule createAttributeTester(class: JavaAbstractSyntax!TypeDeclaration){
+	using{
+		cont: UML2!Class =  UML2!Class->allInstances()->select (e | e.extension->collect(o | o.ownedEnd)->flatten()->exists(t | t.type.name = 'Context'))->first();
+		v1 : Sequence(UML2!Property) = UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = cont))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> cont);
+		v2 : Sequence(String) = UML2!Property->allInstances()->select( p | UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = cont))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> cont)->includes(p))->collect(p|p.type)->collect(n|n.name) ;
+		server : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->select(a | a.navigableOwnedEnd->notEmpty())->collect(a|a.navigableOwnedEnd)->flatten()->collect(m|m.type)->first();
+		testable: UML2!Class = UML2!Class->allInstances()->select(c | c.superClass->size()>0)->select(c | c.superClass->includes(server))->first();
+	} 
+	to attribute1: JavaAbstractSyntax!FieldDeclaration(
+		fragments<- Sequence{}->including(var1)
+	),
+	
+	var1: JavaAbstractSyntax!VariableDeclarationStatement(
+		type <- typeServer,
+		fragments <- Set{ at1Exp },
+		modifiers<- visibylity
+	),
+	
+	typeServer:  JavaAbstractSyntax!SimpleType(
+		name <- TypeServerName
+	),
+	
+	TypeServerName: JavaAbstractSyntax!SimpleName(
+		identifier<- testable.name
+	),
+	
+	visibylity: JavaAbstractSyntax!Modifier(
+		private <- true
+	),
+	
+	at1Exp:JavaAbstractSyntax!VariableDeclarationFragment(
+		name <- simpleNameAt1
+	),
+		
+	simpleNameAt1: JavaAbstractSyntax!SimpleName(
+		identifier<- 'server'
+	),
+	
+	attribute2: JavaAbstractSyntax!FieldDeclaration(
+		fragments<- Sequence{}->including(var2)
+	),
+	
+	var2: JavaAbstractSyntax!VariableDeclarationStatement(
+		type <- typeArbiter,
+		fragments <- Set{ at2Exp },
+		modifiers<- visibylity
+	),
+	
+	typeArbiter:  JavaAbstractSyntax!SimpleType(
+		name <- TypeArbiterName
+	),
+	
+	TypeArbiterName: JavaAbstractSyntax!SimpleName(
+		identifier<- 'Arbiter'
+	),
+		
+	at2Exp:JavaAbstractSyntax!VariableDeclarationFragment(
+		name <- simpleNameAt2
+	),
+		
+	simpleNameAt2: JavaAbstractSyntax!SimpleName(
+		identifier<- 'arbiter'
+	)
+	 
+	do{
+		class.bodyDeclarations <- class.bodyDeclarations->including(attribute1)->including(attribute2);
+	}
+}
+
+rule createExecuteTest(class: JavaAbstractSyntax!TypeDeclaration){
+	using{
+		cont: UML2!Class =  UML2!Class->allInstances()->select (e | e.extension->collect(o | o.ownedEnd)->flatten()->exists(t | t.type.name = 'Context'))->first();
+		v1 : Sequence(UML2!Property) = UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = cont))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> cont);
+		v2 : Sequence(String) = UML2!Property->allInstances()->select( p | UML2!Association->allInstances()->select(a | a.memberEnd->exists(me | me.type = cont))->collect(a | a.memberEnd)->flatten()->select(me|me.type <> cont)->includes(p))->collect(p|p.type)->collect(n|n.name) ;
+		server : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->select(a | a.navigableOwnedEnd->notEmpty())->collect(a|a.navigableOwnedEnd)->flatten()->collect(m|m.type)->first();
+		testable: UML2!Class = UML2!Class->allInstances()->select(c | c.superClass->size()>0)->select(c | c.superClass->includes(server))->first();
+		
+		t: UML2!Class = UML2!Class->allInstances()->select(c | c.ownedOperation->size()>0)->select(c | c.ownedOperation->exists(o | o.name = 'executeTest'))->first();
+		msgs : Sequence(UML2!EventOccurrence) = UML2!Interaction->allInstances()->select(n | n.name = 'Test Cases Execution').asSequence()->first().message;
+		testCases: Set(UML2!Message) =msgs->collect(e | e.sendEvent)->select(m | m.covered->first().name= t.name)->collect(m | m.sendMessage.signature);--)->flatten()->select(n | n.name = t.name);	
+	} 
+	to 	methExecuteTest: JavaAbstractSyntax!MethodDeclaration(
+		name <- nameExTest,
+	 	body <- blockExTest,
+		modifiers <- modExTest,
+		returnType <- verType,
+		parameters <- serverParameter
+	),
+	
+	nameExTest: JavaAbstractSyntax!SimpleName(
+		identifier<-'executeTest'
+	),
+	
+	modExTest: JavaAbstractSyntax!Modifier(
+	 	public <- true
+	),
+	
+	verType: JavaAbstractSyntax!SimpleType(
+		name <- verTypeName
+	),
+	
+	verTypeName: JavaAbstractSyntax!SimpleName(
+		identifier<- 'Verdict'
+	), 
+	
+	blockExTest: JavaAbstractSyntax!Block(
+		statements <- Sequence{}->including(inicArb)
+		->including(inicParamServer)
+		-->including(TCs)
+		->including(returnExTest)
+	),
+		
+	returnExTest: JavaAbstractSyntax!ReturnStatement(
+		expression<- arbGetVerdict
+	),
+	
+	arbGetVerdict: JavaAbstractSyntax!MethodInvocation(
+		expression <- nameVar2,
+		name <- NameGetVerdict
+	),
+	
+	nameVar2:JavaAbstractSyntax!SimpleName(
+		identifier<-'arbiter'
+	),
+	
+	NameGetVerdict: JavaAbstractSyntax!SimpleName(
+		identifier<- 'getVerdict'
+	),
+	
+	serverParameter: JavaAbstractSyntax!SingleVariableDeclaration(
+		name <- nameParameter,
+		type <- serverType
+	),
+	
+	nameParameter: JavaAbstractSyntax!SimpleName(
+		identifier<- 's'
+	),
+	
+	serverType:  JavaAbstractSyntax!SimpleType(
+		name <- serverTypeName
+	),
+	
+	serverTypeName: JavaAbstractSyntax!SimpleName(
+		identifier<- testable.name
+	),
+	
+	inicArb: JavaAbstractSyntax!Assignment(
+		leftHandSide <- nameArbiter,
+		operator<- #ASSIGN,
+		rightHandSide <- newArbiter
+	),
+	
+	nameArbiter:JavaAbstractSyntax!SimpleName(
+		identifier<-'arbiter'
+	),
+	
+	newArbiter: JavaAbstractSyntax!ClassInstanceCreation(
+		type <- arbType
+	),
+	
+	arbType:  JavaAbstractSyntax!SimpleType(
+		name <- arbTypeName
+	),
+	
+	arbTypeName: JavaAbstractSyntax!SimpleName(
+		identifier<- 'Arbiter'
+	),
+	
+	
+	inicParamServer: JavaAbstractSyntax!Assignment(
+		leftHandSide <- nameVar1,
+		operator<- #ASSIGN,
+		rightHandSide <- nameParameter
+	),
+	
+	nameVar1:JavaAbstractSyntax!SimpleName(
+		identifier<-'server'
+	)
+	do{
+		--x.toString().println();	
+		testCases->size().toString().println();
+		for (o in testCases){
+			self.createInvocationOfTestCase(blockExTest, o);
+		}
+		class.bodyDeclarations <- class.bodyDeclarations->including(methExecuteTest);
+	}
+}
+
+rule createInvocationOfTestCase(block: JavaAbstractSyntax!Block, op: UML2!Operation ){
+	to TC: JavaAbstractSyntax!MethodInvocation (
+		name <- TCName
+	),
+	
+	TCName: JavaAbstractSyntax!SimpleName (
+		identifier<- op.name
+	) 
+	do{
+		block.statements <- block.statements->including(TC); 
+	}
+}
+
+rule createArbiter{
+	from arb: UML2!Class (arb.name = 'Arbiter')
+	to 
+	arbJ : JavaAbstractSyntax!TypeDeclaration(
+		name<- nameArbiter,
+		bodyDeclarations <- Set{}--methGetVerdict,methSetVerdict,methDefinesParcVerdict}
+	), 
+	
+	nameArbiter: JavaAbstractSyntax!SimpleName(
+		identifier<- arb.name
+	)
+	
+	do{
+		
+		self.createAttributeArbiter(arbJ);
+		self.createConstructArbiter(arbJ);
+		self.createMethGetVerdictOfArbiter(arbJ);
+		self.createMethSetVerdictOfArbiter(arbJ);
+		self.createMethDefinesParcialVerdictOfArbiter(arbJ);
+	}
+}
+
+rule createConstructArbiter(class: JavaAbstractSyntax!TypeDeclaration){
+	to constr: JavaAbstractSyntax!MethodDeclaration(
+			constructor <- true,
+			name <- constName,
+			modifiers <- modMeth,
+			body <- blockConstArb
+		),
+		
+		constName:JavaAbstractSyntax!SimpleName(
+			identifier<- 'Arbiter'
+	    ),
+		
+		modMeth: JavaAbstractSyntax!Modifier(
+	 		public <- true
+		),
+		
+		 blockConstArb: JavaAbstractSyntax!Block(
+			statements <-  Set{exp1, exp2}
+		),
+		
+		exp1: JavaAbstractSyntax!ExpressionStatement(
+			expression <- assig1
+		),
+		
+		assig1: JavaAbstractSyntax!Assignment(
+			operator<- #ASSIGN,
+			leftHandSide <- verName,
+			rightHandSide <- enumPass
+		),
+		
+		verName:JavaAbstractSyntax!SimpleName(
+			identifier<- 'verdict'
+	    ),
+		
+		enumPass: JavaAbstractSyntax!QualifiedName(
+			qualifier <- enum,
+			name <-  ePass
+		),
+		
+		enum:JavaAbstractSyntax!SimpleName(
+			identifier<- 'Verdict'
+	    ),
+		
+		ePass:JavaAbstractSyntax!SimpleName(
+			identifier<- 'pass'
+	    ) ,
+		
+		exp2: JavaAbstractSyntax!ExpressionStatement(
+			expression <- assig2
+		),
+		
+		assig2: JavaAbstractSyntax!Assignment(
+			operator<- #ASSIGN,
+			leftHandSide <- partialVerName,
+			rightHandSide <- enumPass2
+		),
+		
+		partialVerName:JavaAbstractSyntax!SimpleName(
+			identifier<- 'partialVerdict' 
+	    ),
+		
+		enumPass2: JavaAbstractSyntax!QualifiedName(
+			qualifier <- enum2,
+			name <-  ePass2
+		),
+		
+		enum2:JavaAbstractSyntax!SimpleName(
+			identifier<- 'Verdict'
+	    ),
+		
+		ePass2:JavaAbstractSyntax!SimpleName(
+			identifier<- 'pass'
+	    ) 
+	do{
+		class.bodyDeclarations <- class.bodyDeclarations->including(constr);
+	}
+}
+
+
+rule createMethSetVerdictOfArbiter(class: JavaAbstractSyntax!TypeDeclaration){
+	to 
+	methSetVerdict: JavaAbstractSyntax!MethodDeclaration(
+		name <- nameSetVerdict ,
+		returnType <- voidType,
+		modifiers <- modMeth,
+		parameters <- Sequence{bollParameter,intParameter},
+		body <- blockSetVerdict
+	),
+	
+	modMeth: JavaAbstractSyntax!Modifier(
+	 	public <- true
+	),
+	
+	voidType: JavaAbstractSyntax!PrimitiveType(
+		code <- 'void'
+	),
+	
+	nameSetVerdict: JavaAbstractSyntax!SimpleName(
+		identifier<- 'setVerdict'
+	),
+	
+	bollParameter: JavaAbstractSyntax!SingleVariableDeclaration(
+		name <- nameBoll,
+		type <- bollType
+	),
+	
+	nameBoll: JavaAbstractSyntax!SimpleName(
+		identifier<- 'v'
+	),
+	
+	bollType: JavaAbstractSyntax!PrimitiveType(
+		code <-'boolean'
+	),
+	
+	intParameter: JavaAbstractSyntax!SingleVariableDeclaration(
+		name <- nameInt,
+		type <- intType
+	),
+	
+	nameInt: JavaAbstractSyntax!SimpleName(
+		identifier<- 'i'
+	),
+	
+	intType: JavaAbstractSyntax!PrimitiveType(
+		code <-'int'
+	),
+	
+	blockSetVerdict: JavaAbstractSyntax!Block(
+		statements <-  IfFail
+	),
+	
+	IfFail: JavaAbstractSyntax!IfStatement(
+		expression <- IfFailInfix,
+		thenStatement <- then1
+	),
+	
+	IfFailInfix: JavaAbstractSyntax!InfixExpression(
+		leftOperand <- namePartialVerdict0,
+		rightOperand <- VerFail,
+		operator <- #NOT_EQUALS
+	),
+	
+	namePartialVerdict0: JavaAbstractSyntax!SimpleName(
+		identifier<- 'partialVerdict'
+	),
+	
+	VerFail: JavaAbstractSyntax!QualifiedName(
+		qualifier<- verName,
+		name <- failName
+	),
+	
+	verName: JavaAbstractSyntax!SimpleName(
+		identifier<- 'Verdict'
+	),
+	
+	failName: JavaAbstractSyntax!SimpleName(
+		identifier<- 'fail'
+	),
+	
+	then1: JavaAbstractSyntax!Block(
+		statements <- Set{if2}
+	),
+	
+	if2: JavaAbstractSyntax!IfStatement(
+		expression <- infix2,
+		thenStatement <- expStat2,
+		elseStatement <- if3
+	),
+	
+	infix2: JavaAbstractSyntax!InfixExpression(
+		leftOperand <- vName,
+		rightOperand <- boolTrue,
+		operator <- #EQUALS
+	),
+	
+	vName: JavaAbstractSyntax!SimpleName(
+		identifier<- 'v'
+	),
+	
+	boolTrue: JavaAbstractSyntax!BooleanLiteral(
+		booleanValue <- true
+	),
+	
+	expStat2: JavaAbstractSyntax!ExpressionStatement(
+		expression <- assign2
+	),
+	
+	assign2: JavaAbstractSyntax!Assignment(
+		leftHandSide <- namePartialVerdict1,
+		operator <- #ASSIGN,
+		rightHandSide <- VerFail2
+	),
+	
+	namePartialVerdict1: JavaAbstractSyntax!SimpleName(
+		identifier<- 'partialVerdict'
+	),
+	
+	VerFail2: JavaAbstractSyntax!QualifiedName(
+		qualifier<- verName2,
+		name <- passName2
+	),
+	
+	verName2: JavaAbstractSyntax!SimpleName(
+		identifier<- 'Verdict'
+	),
+	
+	passName2: JavaAbstractSyntax!SimpleName(
+		identifier<- 'pass'
+	),
+	
+	if3: JavaAbstractSyntax!IfStatement(
+		expression <- infix3,
+		thenStatement <- expStat3,
+		elseStatement <- if4
+	),
+	
+	infix3: JavaAbstractSyntax!InfixExpression(
+		leftOperand <- iName,
+		rightOperand <- iZero,
+		operator <- #EQUALS
+	),
+	
+	iName: JavaAbstractSyntax!SimpleName(
+		identifier<- 'i'
+	),
+	
+	iZero: JavaAbstractSyntax!NumberLiteral(
+		token <- '0'
+	),
+	
+	expStat3: JavaAbstractSyntax!ExpressionStatement(
+		expression <- assign3
+	),
+	
+	assign3: JavaAbstractSyntax!Assignment(
+		leftHandSide <- namePartialVerdict2,
+		operator <- #ASSIGN,
+		rightHandSide <- VerFail3
+	),
+	
+	namePartialVerdict2: JavaAbstractSyntax!SimpleName(
+		identifier<- 'partialVerdict'
+	),
+	
+	VerFail3: JavaAbstractSyntax!QualifiedName(
+		qualifier<- verName3,
+		name <- failName3
+	),
+	
+	verName3: JavaAbstractSyntax!SimpleName(
+		identifier<- 'Verdict'
+	),
+	
+	failName3: JavaAbstractSyntax!SimpleName(
+		identifier<- 'fail'
+	),
+	
+	if4: JavaAbstractSyntax!IfStatement(
+		expression <- infix4,
+		thenStatement <- expStat4,
+		elseStatement <- expStat5
+	),
+	
+	infix4: JavaAbstractSyntax!InfixExpression(
+		leftOperand <- iName2,
+		rightOperand <- iOne,
+		operator <- #EQUALS
+	),
+	
+	iName2: JavaAbstractSyntax!SimpleName(
+		identifier<- 'i'
+	),
+	
+	iOne: JavaAbstractSyntax!NumberLiteral(
+		token <- '1'
+	),
+	
+	expStat4: JavaAbstractSyntax!ExpressionStatement(
+		expression <- assign4
+	),
+	
+	assign4: JavaAbstractSyntax!Assignment(
+		leftHandSide <- namePartialVerdict3,
+		operator <- #ASSIGN,
+		rightHandSide <- Ver4
+	),
+	
+	namePartialVerdict3: JavaAbstractSyntax!SimpleName(
+		identifier<- 'partialVerdict'
+	),
+	
+	Ver4: JavaAbstractSyntax!QualifiedName(
+		qualifier<- verName4,
+		name <- inconclusName4
+	),
+	
+	verName4: JavaAbstractSyntax!SimpleName(
+		identifier<- 'Verdict'
+	),
+	
+	inconclusName4: JavaAbstractSyntax!SimpleName(
+		identifier<- 'inconclusive'
+	),
+	
+	expStat5: JavaAbstractSyntax!ExpressionStatement(
+		expression <- assign5
+	),
+	
+	assign5: JavaAbstractSyntax!Assignment(
+		leftHandSide <- namePartialVerdict4,
+		operator <- #ASSIGN,
+		rightHandSide <- Ver5
+	),
+	
+	namePartialVerdict4: JavaAbstractSyntax!SimpleName(
+		identifier<- 'partialVerdict'
+	),
+	
+	Ver5: JavaAbstractSyntax!QualifiedName(
+		qualifier<- verName5,
+		name <- errorName5
+	),
+	
+	verName5: JavaAbstractSyntax!SimpleName(
+		identifier<- 'Verdict'
+	),
+	
+	errorName5: JavaAbstractSyntax!SimpleName(
+		identifier<- 'error'
+	)
+	
+	do{
+		class.bodyDeclarations <- class.bodyDeclarations->including(methSetVerdict);
+	}
+}
+
+
+
+rule createMethDefinesParcialVerdictOfArbiter(class: JavaAbstractSyntax!TypeDeclaration){
+	to 
+	methDefinesParcialVerdict: JavaAbstractSyntax!MethodDeclaration(
+		name <- nameDefinesParcialVerdict,
+		returnType <- voidType,
+		modifiers <- modMeth,
+		body <- blockDefinesParcialVerdict
+	),
+	
+	modMeth: JavaAbstractSyntax!Modifier(
+	 	public <- true
+	),
+	
+	voidType: JavaAbstractSyntax!PrimitiveType(
+		code <- 'void'
+	),
+	
+	nameDefinesParcialVerdict: JavaAbstractSyntax!SimpleName(
+		identifier<- 'definesPartialVerdict'
+	),
+	
+	blockDefinesParcialVerdict: JavaAbstractSyntax!Block(
+		statements <-  assig
+	),
+	
+	assig: JavaAbstractSyntax!Assignment(
+		leftHandSide <- nameVerdict,
+		operator<- #ASSIGN,
+		rightHandSide <- namePartialVerdict
+	),
+	
+	nameVerdict: JavaAbstractSyntax!SimpleName(
+		identifier<- 'verdict'
+	),
+	
+	namePartialVerdict: JavaAbstractSyntax!SimpleName(
+		identifier<- 'partialVerdict'
+	)
+	
+	do{
+		class.bodyDeclarations <- class.bodyDeclarations->including(methDefinesParcialVerdict);
+	}
+}
+
+
+rule createMethGetVerdictOfArbiter(class: JavaAbstractSyntax!TypeDeclaration){
+	to 
+	methGetVerdict: JavaAbstractSyntax!MethodDeclaration(
+		name <- nameGetVerdict ,
+		returnType <- typeVerdict,
+		modifiers <- modMeth,
+		body <- blockGetVerdict
+	),
+	
+	modMeth: JavaAbstractSyntax!Modifier(
+	 	public <- true
+	),
+	
+	 nameGetVerdict: JavaAbstractSyntax!SimpleName(
+		identifier<- 'getVerdict'
+	),
+	
+	typeVerdict:  JavaAbstractSyntax!SimpleType(
+		name <- TypeVerdictName
+	),
+	
+	TypeVerdictName: JavaAbstractSyntax!SimpleName(
+		identifier<-'Verdict'
+	),
+	
+	blockGetVerdict: JavaAbstractSyntax!Block(
+		statements <-  returnGetVerdict
+	),
+	
+	returnGetVerdict: JavaAbstractSyntax!ReturnStatement(
+		expression<- ver
+	),
+	
+	ver:  JavaAbstractSyntax!StringLiteral(
+		literalValue <- 'verdict'
+	)
+	
+	do{
+		class.bodyDeclarations <- class.bodyDeclarations->including(methGetVerdict);
+	}
+}
+
+
+rule createAttributeArbiter(class: JavaAbstractSyntax!TypeDeclaration){
+	using{
+		
+	} 
+	to attribute1: JavaAbstractSyntax!FieldDeclaration(
+		fragments<- Sequence{}->including(var1)
+	),
+	
+	var1: JavaAbstractSyntax!VariableDeclarationStatement(
+		type <- typeVerdict,
+		fragments <- Set{ at1Exp },
+		modifiers<- visibylity 
+	),
+	
+	typeVerdict:  JavaAbstractSyntax!SimpleType(
+		name <- TypeVerdictName
+	),
+	
+	TypeVerdictName: JavaAbstractSyntax!SimpleName(
+		identifier<-'Verdict'
+	),
+	
+	visibylity: JavaAbstractSyntax!Modifier(
+		private <- true
+	),
+	
+	at1Exp:JavaAbstractSyntax!VariableDeclarationFragment(
+		name <- simpleNameAt1
+	),
+		
+	simpleNameAt1: JavaAbstractSyntax!SimpleName(
+		identifier<- 'verdict'
+	),
+	
+	attribute2: JavaAbstractSyntax!FieldDeclaration(
+		fragments<- Sequence{}->including(var2)
+	),
+	
+	var2: JavaAbstractSyntax!VariableDeclarationStatement(
+		type <- typeVerdict2,
+		fragments <- Set{ at2Exp },
+		modifiers<- visibylity2
+	),
+	
+	typeVerdict2:  JavaAbstractSyntax!SimpleType(
+		name <- TypeVerdictName2
+	),
+	
+	TypeVerdictName2: JavaAbstractSyntax!SimpleName(
+		identifier<-'Verdict'
+	),
+		
+	visibylity2: JavaAbstractSyntax!Modifier(
+		private <- true
+	),
+	
+	at2Exp:JavaAbstractSyntax!VariableDeclarationFragment(
+		name <- simpleNameAt2
+	),
+		
+	simpleNameAt2: JavaAbstractSyntax!SimpleName(
+		identifier<- 'partialVerdict'
+	)
+	 
+	do{
+		class.bodyDeclarations <- class.bodyDeclarations->including(attribute1)->including(attribute2);
+	}
+}
+
+
+rule createVerdict{
+	from ver:UML2!Enumeration(ver.name= 'Verdict')
+	using{
+		
+	}
+	to verd: JavaAbstractSyntax!EnumDeclaration(
+		name <- nameEnum,
+		enumConstants <- Set{pass, fail, inconclusive, error}
+	),
+	nameEnum:JavaAbstractSyntax!SimpleName(
+		identifier<- 'Verdict'
+	),
+	pass: JavaAbstractSyntax!EnumConstantDeclaration(
+		name <- namePass
+	),
+	namePass:JavaAbstractSyntax!SimpleName(
+		identifier<- 'pass'
+	),
+	fail: JavaAbstractSyntax!EnumConstantDeclaration(
+		name <- nameFail
+	),
+	nameFail:JavaAbstractSyntax!SimpleName(
+		identifier<- 'fail'
+	),
+	inconclusive: JavaAbstractSyntax!EnumConstantDeclaration(
+		name <- nameInconclusive
+	),
+	nameInconclusive:JavaAbstractSyntax!SimpleName(
+		identifier<- 'inconclusive'
+	),
+	error: JavaAbstractSyntax!EnumConstantDeclaration(
+		name <- nameError
+	),
+	nameError:JavaAbstractSyntax!SimpleName(
+		identifier<- 'error'
+	)
+ 
+}
