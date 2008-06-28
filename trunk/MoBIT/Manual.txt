@@ -1,0 +1,13 @@
+PIM2PITM
+
+* Diagrama de classes
+* Diagrama de estados
+* Diagramas de Sequencia, cada qual representado como serão os casos
+de testes em um nivel de abstração maior, consideramos
+que estes serão formecidos por Spaces
+
+PITM2PSTM
+
+* Diagrama de classes (saida da 1ª regra???)
+* Diagrama de Sequencia que representa a execução dos
+casos de teste
