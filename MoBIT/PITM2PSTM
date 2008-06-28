@@ -1,0 +1,103 @@
+module CITMPITM2PSTM; -- Module Template
+create OUT : JavaAbstractSyntax from IN : UML2; 
+     
+rule CreateTestingClientClass{ 
+	from class:UML2!Class(class.ownedOperation->exists(o | o.name = 'setTester'))
+	using{...}
+	--Criação da classe Java TestingClient
+	to typeTest:JavaAbstractSyntax!TypeDeclaration(
+		name<-nameClass,
+		superclassType <- typeClient,
+		bodyDeclarations <- Set{}
+
+	),
+	
+	nameClass:JavaAbstractSyntax!SimpleName(
+		identifier<- class.name
+	),
+	
+	typeClient: JavaAbstractSyntax!SimpleType(
+		name <- TypeClientName
+	),
+	
+	TypeClientName: JavaAbstractSyntax!SimpleName(
+		identifier<- client.name
+	)
+	
+	do{
+		self.createAtributesTesting(typeTest);
+		for (e in eventsWhitTesting){
+			if (thisModule.nameOfOperation(e)='setTester')	
+				self.createMethodSetTester(e, typeTest);
+			else if (thisModule.nameOfOperation(e)='setServer')
+				self.createMethodSetServer(e, typeTest);
+			else self.createMethodPerform(e, typeTest);
+		}
+		
+	}
+	
+}
+
+-- Cria metodo setServer
+rule createMethodSetServer( e: UML2!EventOccureence, typeTest: JavaAbstractSyntax!TypeDeclaration ){
+using{...}
+to method: JavaAbstractSyntax!MethodDeclaration (
+		name <- simpleName , 
+	 	body <- blockMeth,
+		modifiers <- modMeth,
+		returnType <- voidType,
+		parameters <- testerParameter
+	),
+	
+	voidType: JavaAbstractSyntax!PrimitiveType(
+		code <- 'void'
+	),
+	
+	simpleName: JavaAbstractSyntax!SimpleName(
+		identifier<-'setServer'
+	),
+	
+	modMeth: JavaAbstractSyntax!Modifier(
+	 	public <- true
+	),
+	
+	blockMeth: JavaAbstractSyntax!Block (
+		statements<- Set{}->including(declaration)
+	),
+	
+	declaration: JavaAbstractSyntax!Assignment(
+		leftHandSide<- var,
+		operator<- #ASSIGN,
+		rightHandSide<- value
+	),
+	
+	var:JavaAbstractSyntax!SimpleName(
+		identifier<-'server'
+	),
+	
+	value: JavaAbstractSyntax!StringLiteral(
+		literalValue <- 's'
+	),
+	
+	testerParameter: JavaAbstractSyntax!SingleVariableDeclaration(
+		name <- nameParameter,
+		type <- testerType
+	),
+	
+	nameParameter: JavaAbstractSyntax!SimpleName(
+		identifier<- 's'
+	),
+	
+	testerType:  JavaAbstractSyntax!SimpleType(
+		name <- testerTypeName
+	),
+	
+	testerTypeName: JavaAbstractSyntax!SimpleName(
+		identifier<- testable.name
+	)
+		
+	do{
+		
+		typeTest.bodyDeclarations<-typeTest.bodyDeclarations->including(method);
+	}
+}

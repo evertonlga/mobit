@@ -1,0 +1,129 @@
+module CIMPIM2CITMPITM; -- Module Template
+create OUT : UML2 from IN : UML2;
+
+rule createBITArtifacts (model: UML2!Model){
+	 	
+	from cont:UML2!Class(cont.extension->collect(o | o.ownedEnd)->flatten()->exists(t | t.type.name = 'Context'))
+	using{
+		
+		server : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->select(a | a.navigableOwnedEnd->notEmpty())->collect(a|a.navigableOwnedEnd)->flatten()->collect(m|m.type)->first();
+		client : UML2!Class = UML2!Association->allInstances()->select(a|a.memberEnd->size()>0)->select(a|a.memberEnd->collect(me|me.type)->collect(t|t.name)->includesAll(v2))->collect(a|a.memberEnd)->flatten()->collect(m|m.type)->excluding(server)->first();
+
+	}
+	-- Criação da classe Testing do Cliente
+	to subc:UML2!Class(
+		superClass <- client,
+		generalization <- genc,
+		name <- 'Testing' + client.name,
+		ownedOperation <- Set{oo1,oo2,oo3},
+		extension <- cExt
+	),
+	genc:UML2!Generalization(
+		specific <- subc,
+		general <- subc
+	),
+	oo1:UML2!Operation(
+		name <- 'setTester',
+		visibility <- #public,
+		ownedParameter <- param1
+	),
+	
+	oo2:UML2!Operation(
+		name <- 'setServer',
+		visibility <- #public,
+		ownedParameter <- param2
+	),
+	
+	oo3:UML2!Operation(
+		name <- 'performedTest',
+		visibility <- #public
+	),
+		
+	param1:UML2!Parameter(
+		name <- 'tester',
+		type <- sTester
+	),
+		
+	param2:UML2!Parameter(
+		name <- 'server',
+		type <- subs
+	),
+		
+	cExt:UML2!Extension(
+		ownedEnd <- coe
+	),
+	coe:UML2!ExtensionEnd(
+		type <- ct
+	),
+
+	-- Criação da classe Tester
+	sTester:UML2!Class(
+		name <- server.name +  'Tester',
+		ownedOperation <- Set{ooTester1},
+		ownedAttribute<- Set{atrib},
+		extension <- cExtTester		
+	),
+	ooTester1:UML2!Operation(
+		name <- 'executeTest',
+		ownedParameter <- Set{par},
+		visibility <- #public
+	),
+			
+	par:UML2!Parameter(
+		name <- 'testable',
+		type <- subs
+	),
+	
+	cExtTester:UML2!Extension(
+		ownedEnd <- coeTester
+	),
+	coeTester:UML2!ExtensionEnd(
+		type <- ct
+	),
+	ct:UML2!Stereotype(
+		name <- 'TestingComponent'
+	),
+	as:UML2!Stereotype(
+		name <- 'acquires'
+	),
+	assoc1: UML2!Association(
+		owner <- aE,
+		memberEnd <- Set{prop11, prop12},
+		navigableOwnedEnd <- Set{prop12}
+	),
+	prop11: UML2!Property(
+		type <- subc
+	),
+	prop12: UML2!Property(
+		type <- sTester
+	),
+	aE:UML2!Extension(
+		ownedEnd <- aEE
+	),
+	aEE:UML2!ExtensionEnd(
+		type <- as
+	),
+	assoc2: UML2!Association(
+		owner <- aE2,
+		memberEnd <- Set{prop21, prop22},
+		navigableOwnedEnd <- Set{prop22}
+	),
+	prop21: UML2!Property(
+		type <- sTester
+	),
+	prop22: UML2!Property(
+		type <- subs
+	),
+	aE2:UML2!Extension(
+		ownedEnd <- aEE2
+	),
+	aEE2:UML2!ExtensionEnd(
+		type <- as
+	),
+	
+	atrib: UML2!Property(
+		name<- 'arbiter',
+		type<- arbiter
+	)
+	
+}
